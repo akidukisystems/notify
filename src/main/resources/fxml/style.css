@@ -1,0 +1,23 @@
+.label {
+    -fx-font-family: "Calibri";    /* フォント名を変更 */
+    -fx-font-size: 36px;         /* フォントサイズ */
+}
+
+/* 通常状態 */
+.button {
+    -fx-background-color: rgba(32, 32, 32, 0.5);
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 8 16 8 16;
+}
+
+/* ホバー時 */
+.button:hover {
+    -fx-background-color: rgba(64, 64, 64, 0.5);
+}
+
+.button:pressed {
+    -fx-background-color: rgba(16, 16, 16, 0.4);
+}

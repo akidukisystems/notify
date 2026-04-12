@@ -1,0 +1,8 @@
+{
+    "blur": 75,
+    "wallpaperChangeTime": 300,
+    "refreshWeatherTime": 1200,
+    "reverseUITime": 600,
+    "apiKeyJson": "/config/apikey.json",
+    "wallpaperPath": "I:\\My Resources\\Java\\.userResources\\"
+}
