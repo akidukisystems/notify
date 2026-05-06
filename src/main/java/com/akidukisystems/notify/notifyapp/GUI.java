@@ -13,6 +13,8 @@ public class GUI extends Application {
     private static Weather staticWeather;
     private static Configure staticConfigure;
 
+    public static Stage stage;
+
     public static void setClass(Weather weather, Configure configure) {
         staticWeather = weather;
         staticConfigure = configure;
@@ -38,6 +40,8 @@ public class GUI extends Application {
         scene.getStylesheets().add(
             getClass().getResource("/fxml/style.css").toExternalForm()
         );
+
+        GUI.stage = stage;
 
         stage.setScene(scene);
         stage.setFullScreen(true);

@@ -14,8 +14,12 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.stream.Stream;
 
+import org.girod.javafx.svgimage.SVGImage;
+import org.girod.javafx.svgimage.SVGLoader;
+
 import com.akidukisystems.notify.notifyapp.ColorHelper;
 import com.akidukisystems.notify.notifyapp.Configure;
+import com.akidukisystems.notify.notifyapp.GUI;
 import com.akidukisystems.notify.notifyapp.Weather;
 import com.akidukisystems.notify.notifyapp.Configure.WallpaperColor;
 
@@ -99,6 +103,9 @@ public class ctrl {
     private boolean isScrolling = false;
 
     private Polygon windArrow;
+    private SVGIcon weatherTempIcon;
+    private SVGIcon weatherFeelingTempIcon;
+    private SVGIcon weatherHumidityIcon;
 
     private List<Label> Labels;
     private List<WeatherForecastUI> forecasts;
@@ -252,21 +259,20 @@ public class ctrl {
         // 日付はそのまま
         dateLabel = createLabel("", 72);
 
-
         // 1行目　気温
         weatherTempLabel = createLabel("", 48);
-        Label weatherTempTextLabel = createLabel("外気温", 28);
-        VBox tempBox = createVBox(10, weatherTempTextLabel, create2elementsLabel(weatherTempLabel, "℃", 32));
+        weatherTempIcon = createIcon("/icons/svg/temp.svg", 32, fixedTextColor);
+        VBox tempBox = createVBox(10, weatherTempIcon, create2elementsLabel(weatherTempLabel, "℃", 32));
 
         // 体感気温
         weatherFeelingTempLabel = createLabel("", 48);
-        Label weatherFeelingTempTextLabel = createLabel("体感気温", 28);
-        VBox feelingTempBox = createVBox(10, weatherFeelingTempTextLabel, create2elementsLabel(weatherFeelingTempLabel, "℃", 32));
+        weatherFeelingTempIcon = createIcon("/icons/svg/person.svg", 32, fixedTextColor);
+        VBox feelingTempBox = createVBox(10, weatherFeelingTempIcon, create2elementsLabel(weatherFeelingTempLabel, "℃", 32));
 
         // 湿度
         weatherHumidityLabel = createLabel("", 48);
-        Label weatherHumidityTextLabel = createLabel("湿度", 28);
-        VBox humidityBox = createVBox(10, weatherHumidityTextLabel, create2elementsLabel(weatherHumidityLabel, "%", 32));
+        weatherHumidityIcon = createIcon("/icons/svg/humid.svg", 32, fixedTextColor);
+        VBox humidityBox = createVBox(10, weatherHumidityIcon, create2elementsLabel(weatherHumidityLabel, "%", 32));
 
         // 2行目　大気圧
         weatherPressureLabel = createLabel("", 32);
@@ -353,23 +359,33 @@ public class ctrl {
         LeftTopBox = createVBox(30, dateLabel, timeBox, weatherBoxLine1, weatherBoxLine2, weatherForecastsBox, alertGridPane);
 
         // 壁紙更新ボタン
-        Button changeWallpaperButton = new Button("refresh");
-        changeWallpaperButton.setPrefWidth(100);
-        changeWallpaperButton.setPrefHeight(18);
+        Button changeWallpaperButton = new Button();
+        changeWallpaperButton.setGraphic(createIcon("/icons/svg/refresh.svg", 20, Color.WHITE));
+        changeWallpaperButton.setPrefWidth(20);
+        changeWallpaperButton.setPrefHeight(20);
         changeWallpaperButton.setOnAction(e -> {
             switchWallpaper();
         });
 
-        Button changeNightModeButton = new Button("Night");
-        changeNightModeButton.setPrefWidth(100);
-        changeNightModeButton.setPrefHeight(18);
+        Button changeNightModeButton = new Button();
+        changeNightModeButton.setGraphic(createIcon("/icons/svg/routine.svg", 20, Color.WHITE));
+        changeNightModeButton.setPrefWidth(20);
+        changeNightModeButton.setPrefHeight(20);
         changeNightModeButton.setOnAction(e -> {
             setNightMode(!isNightMode());
         });
 
+        Button setFullScreenButton = new Button();
+        setFullScreenButton.setGraphic(createIcon("/icons/svg/fs.svg", 20, Color.WHITE));
+        setFullScreenButton.setPrefWidth(20);
+        setFullScreenButton.setPrefHeight(20);
+        setFullScreenButton.setOnAction(e -> {
+            setFullScreen(true);
+        });
+
         HBox buttonsBox = new HBox(10);
         buttonsBox.setAlignment(Pos.CENTER);
-        buttonsBox.getChildren().addAll(changeWallpaperButton, changeNightModeButton);
+        buttonsBox.getChildren().addAll(changeWallpaperButton, changeNightModeButton, setFullScreenButton);
 
 
         // 左上にくっつける
@@ -719,6 +735,9 @@ public class ctrl {
         }
         updateShadowColor();
         windArrow.setFill(wbColor);
+        weatherTempIcon.setColor(newColor);
+        weatherFeelingTempIcon.setColor(newColor);
+        weatherHumidityIcon.setColor(newColor);
     }
 
     // ラベルの色を変える部分
@@ -852,7 +871,7 @@ public class ctrl {
     private void setNightMode(boolean isNight) {
         if(isNight) {
             ColorAdjust darken = new ColorAdjust();
-            darken.setBrightness(-0.5);
+            darken.setBrightness(-0.75);
             rootPane.setEffect(darken);
 
             if(isScrolling)
@@ -875,6 +894,10 @@ public class ctrl {
     // ナイトモードか知る
     private boolean isNightMode() {
         return !secBox.isVisible();
+    }
+
+    private void setFullScreen(boolean isFullscreen) {
+        GUI.stage.setFullScreen(true);
     }
 
     // UIを左右反転させる
@@ -902,5 +925,14 @@ public class ctrl {
         });
 
         fadeOut.play();
+    }
+
+    private SVGIcon createIcon(String path, double size, Color color) {
+        SVGImage svg = SVGLoader.load(getClass().getResource(path));
+        SVGImage scaled = svg.scaleTo(size);
+        SVGIcon icon = new SVGIcon(scaled, size);
+        icon.setColor(color);
+        icon.setEffect(ds);
+        return icon;
     }
 }

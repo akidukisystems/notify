@@ -174,7 +174,7 @@ public class Weather {
 
     public CompletableFuture<Void> fetch() {
         HttpClient client = HttpClient.newHttpClient();
-        String url = "https://api.openweathermap.org/data/3.0/onecall?lat=35.921474&lon=140.029464&lang=ja&exclude=minutely,hourly&appid=" + core.configure.getApiKey();
+        String url = "https://api.openweathermap.org/data/3.0/onecall?lat=35.799653&lon=139.585994&lang=ja&exclude=minutely,hourly&appid=" + core.configure.getApiKey();
 
         LocalDateTime now = LocalDateTime.now();
         System.out.println("fetchしています ("+ now.format(DateTimeFormatter.ofPattern("dd HH:mm:ss")) +")");
