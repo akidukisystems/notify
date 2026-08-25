@@ -5,14 +5,26 @@
   <artifactId>notify</artifactId>
   <name>notify</name>
   <version>0.0.1-SNAPSHOT</version>
-  <description>Demo project for Spring Boot</description>
+  <description>デスクトップ壁紙に時計・天気予報・気象警報を表示するJavaFX製の常駐アプリ</description>
+  <url>https://github.com/akidukisystems/notify</url>
   <developers>
-    <developer />
+    <developer>
+      <id>akidukisystems</id>
+      <name>akidukisystems</name>
+      <email>densyamc@gmail.com</email>
+    </developer>
   </developers>
   <licenses>
-    <license />
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+    </license>
   </licenses>
-  <scm />
+  <scm>
+    <connection>scm:git:https://github.com/akidukisystems/notify.git</connection>
+    <developerConnection>scm:git:https://github.com/akidukisystems/notify.git</developerConnection>
+    <url>https://github.com/akidukisystems/notify</url>
+  </scm>
   <build>
     <plugins>
       <plugin>
@@ -27,7 +39,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>com.akidukisystems.notify.notifyapp.GUI</mainClass>
+                  <mainClass>com.akidukisystems.notify.notifyapp.NotifyApplication</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -36,6 +48,12 @@
       </plugin>
     </plugins>
   </build>
+  <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
   <properties>
     <maven.compiler.target>25</maven.compiler.target>
     <java.version>25</java.version>
