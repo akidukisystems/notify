@@ -1,8 +1,47 @@
-WBMC - WallClock
-Revision 1
+# WBMC - WallClock
 
-Features:
-- Animated Digital Clock
-- Weather Forecast
-- Customizable Wallpaper
-- Night Mode
+デスクトップ壁紙の上に時計・天気予報・気象警報などを常時表示する、JavaFX製のフルスクリーン常駐アプリです。
+
+## 機能
+
+- **アニメーション付きデジタル時計**
+- **天気予報**(OpenWeather One Call API)
+  - 現在の気温・体感気温・湿度・気圧・視界・風向風速を表示
+  - 3日分の予報アイコンをクリックすると、その日の最高(昼)・最低(朝)・平均気温をオーバーレイ表示
+- **気象警報・注意報**(気象庁の防災情報XMLフィードから取得)
+  - 警報・注意報バッジをクリックすると、発表時刻・ステータス・危険度・特記事項をオーバーレイ表示
+- **壁紙の自動切り替え**
+  - 時間帯(朝・昼・夕方・夜・深夜)に応じたタグベースのランダム選択
+  - 背景ぼかし・暗化エフェクト
+  - 壁紙から自動抽出、またはメタデータ指定のテーマカラーをUI全体に反映
+- **ナイトモード**(画面全体を暗くし、時計の秒表示をフェードアウト)
+- **UI左右反転**(焼き付き防止のため、一定周期で表示位置を左右に切り替え)
+- **Bluetoothマウスのバッテリー残量表示**(Windows専用、PowerShell経由で取得)
+- **設定画面**(アプリ右下の歯車アイコンから起動)
+  - 壁紙フォルダ・壁紙メタデータのパス
+  - 緯度・経度、気象警報の地域コード・地域名
+  - 背景ぼかし量・フォントサイズ倍率
+  - 壁紙更新/天気更新/UI反転の各周期(秒)
+  - OpenWeather APIキー
+  - マウスのBluetoothデバイスID(バッテリー取得用)
+
+## 動作環境
+
+- Windows(バッテリー残量取得にPowerShellを使用するためWindows専用)
+- Java 25
+- Maven(同梱の `mvnw` / `mvnw.cmd` を利用可能)
+
+## ビルド・実行
+
+```
+mvnw.cmd clean package
+java -jar target/notify-0.0.1-SNAPSHOT.jar
+```
+
+開発中はIDE(VSCode + Java拡張など)から `NotifyApplication` の `main` を直接実行することも可能です。
+
+## 設定ファイル
+
+初回起動時に `%APPDATA%\NotifyApp\settings.json` が作成され、以後の起動時はこのファイルから設定を読み込みます。上記「設定画面」から変更した内容もここに保存されます。
+
+OpenWeatherのAPIキーは `%APPDATA%\NotifyApp\apikey.json` に別ファイルとして保存されます(リポジトリには含めません)。

@@ -6,19 +6,26 @@
 	<artifactId>notify</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>notify</name>
-	<description>Demo project for Spring Boot</description>
-	<url/>
+	<description>デスクトップ壁紙に時計・天気予報・気象警報を表示するJavaFX製の常駐アプリ</description>
+	<url>https://github.com/akidukisystems/notify</url>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+		</license>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<id>akidukisystems</id>
+			<name>akidukisystems</name>
+			<email>densyamc@gmail.com</email>
+		</developer>
 	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:https://github.com/akidukisystems/notify.git</connection>
+		<developerConnection>scm:git:https://github.com/akidukisystems/notify.git</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/akidukisystems/notify</url>
 	</scm>
 	<properties>
 		<java.version>25</java.version>
