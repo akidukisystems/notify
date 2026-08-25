@@ -44,10 +44,18 @@ public class Weather {
     String area;            // 地域
     int timezone;           // タイムゾーン（秒単位）
 
+    private WeatherConverter wc = new WeatherConverter();
+    JmaWarning jma;
+
+    public JmaWarning getJma() {
+        return jma;
+    }
+
     private Core core;
 
     public void setCore(Core core) {
         this.core = core;
+        this.jma = new JmaWarning(core.configure.getJmaAreaCode());
     }
 
     public double getRain() {
@@ -162,6 +170,12 @@ public class Weather {
         return daily;
     }
 
+    private List<JmaWarning.Warning> warnings = new ArrayList<>();
+
+    public List<JmaWarning.Warning> getWarnings() {
+        return warnings;
+    }
+
     public void fetchDemo() {
         // デモ用の固定JSON
         String demoJson = """
@@ -174,7 +188,13 @@ public class Weather {
 
     public CompletableFuture<Void> fetch() {
         HttpClient client = HttpClient.newHttpClient();
-        String url = "https://api.openweathermap.org/data/3.0/onecall?lat=35.799653&lon=139.585994&lang=ja&exclude=minutely,hourly&appid=" + core.configure.getApiKey();
+
+        double lat = core.configure.getLatitude();
+        double lon = core.configure.getLongitude();
+
+         String url = "https://api.openweathermap.org/data/3.0/onecall?lat=" + lat
+                + "&lon=" + lon
+                + "&lang=ja&exclude=minutely,hourly&appid=" + core.configure.getApiKey();
 
         LocalDateTime now = LocalDateTime.now();
         System.out.println("fetchしています ("+ now.format(DateTimeFormatter.ofPattern("dd HH:mm:ss")) +")");
@@ -182,6 +202,19 @@ public class Weather {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .build();
+
+        try {
+            warnings = jma.fetch();
+
+            for (JmaWarning.Warning warning : warnings) {
+                System.out.println(warning.getName());
+                System.out.println("Code: " + warning.getCode());
+                System.out.println("Status: " + warning.getStatus());
+                System.out.println("危険度: " + warning.getSignificancyName());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
             .thenApplyAsync(response -> {
@@ -227,7 +260,7 @@ public class Weather {
                 JsonObject weather = weatherArr.get(0).getAsJsonObject();
                 weatherID = weather.has("id") ? weather.get("id").getAsInt() : 0;
                 weatherString = weather.has("main") ? weather.get("main").getAsString() : "";
-                weatherDetail = weather.has("description") ? weather.get("description").getAsString() : "";
+                weatherDetail = weather.has("description") ? wc.formatted(weather.get("description").getAsString()) : "";
                 weatherIcon = weather.has("icon") ? weather.get("icon").getAsString() : "";
             }
         }
@@ -253,7 +286,7 @@ public class Weather {
                     JsonObject weather = weatherArr.get(0).getAsJsonObject();
                     d.weatherID = weather.has("id") ? weather.get("id").getAsInt() : 0;
                     d.weatherString = weather.has("main") ? weather.get("main").getAsString() : "";
-                    d.weatherDetail = weather.has("description") ? weather.get("description").getAsString() : "";
+                    d.weatherDetail = weather.has("description") ? wc.formatted(weather.get("description").getAsString()) : "";
                     d.weatherIcon = weather.has("icon") ? weather.get("icon").getAsString() : "";
                 }
 

@@ -5,6 +5,7 @@ public class Core {
 
     public void init() {
         configure = new Configure();
+        configure.loadSettings(); 
         Weather weather = new Weather();
         weather.setCore(this);
 

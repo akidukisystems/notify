@@ -8,12 +8,12 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 public class WeatherForecastUI {
-    Label dayLabel;
-    Label label;
-    ImageView iconView;
-    VBox box;
+    public Label dayLabel;
+    public Label label;
+    public ImageView iconView;
+    public VBox box;
 
-    WeatherForecastUI(String dayText, Color textColor, DropShadow ds) {
+    public WeatherForecastUI(String dayText, Color textColor, DropShadow ds) {
         dayLabel = new Label(dayText);
         label = new Label("晴れ");
         iconView = new ImageView();
