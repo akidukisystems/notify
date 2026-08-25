@@ -16,7 +16,10 @@ import org.girod.javafx.svgimage.SVGLoader;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
@@ -27,6 +30,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.transform.Rotate;
+import javafx.stage.Popup;
 import javafx.util.Duration;
 
 public class WeatherUIController implements ThemeManager.ThemeListener {
@@ -56,6 +60,9 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
     private SVGIcon weatherHumidityIcon;
 
     private List<WeatherForecastUI> forecasts;
+
+    private Popup forecastDetailPopup;
+    private ImageView forecastDetailIconSource;
 
     private final HBox line1Box; // 気温・体感温度・湿度
     private final HBox line2Box; // 気圧・視界・風向
@@ -125,6 +132,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         iconView.setFitWidth(112);
         iconView.setFitHeight(112);
         iconView.setEffect(themeManager.getShadow());
+        iconView.setCursor(Cursor.HAND);
         VBox currentWeatherBox = createVBox(10, iconView, currentWeatherDetailLabel);
 
         // 予報3日分
@@ -147,11 +155,12 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
     public HBox getForecastsBox() { return forecastsBox; }
 
     public void update() {
-        updateCurrentWeather();
-        updateForecasts();
+        List<Weather.Daily> daily = weather.getDaily();
+        updateCurrentWeather(daily);
+        updateForecasts(daily);
     }
 
-    private void updateCurrentWeather() {
+    private void updateCurrentWeather(List<Weather.Daily> daily) {
         weatherTempLabel.setText(String.format("%.1f", weather.getTemp() - 273.15));
         weatherFeelingTempLabel.setText(String.format("%.1f", weather.getFeelingTemp() - 273.15));
         weatherHumidityLabel.setText(String.format("%d", (int) weather.getHumidity()));
@@ -169,6 +178,11 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
 
         currentWeatherDetailLabel.setText(weather.getWeatherDetail());
 
+        if (!daily.isEmpty()) {
+            Weather.Daily today = daily.get(0);
+            iconView.setOnMouseClicked(e -> toggleForecastDetail(iconView, today));
+        }
+
         double uvi = weather.getUvi();
         if (uvi >= 3.0) {
             if (uvi < 6.0) {
@@ -183,9 +197,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         }
     }
 
-    private void updateForecasts() {
-        List<Weather.Daily> daily = weather.getDaily();
-
+    private void updateForecasts(List<Weather.Daily> daily) {
         int j = 0;
         if (isPastedDaySupplier.get()) j = 1;
 
@@ -203,6 +215,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
 
             f.label.setText(d.weatherDetail);
             f.dayLabel.setText(dayString[j]);
+            f.iconView.setOnMouseClicked(e -> toggleForecastDetail(f.iconView, d));
 
             messageConsumer.accept("" + dayString[j] + "の天気は" + d.weatherDetail + "、日中の最高気温は　"
                 + String.format("%.1f", d.temp_max - 273.15) + "℃　最低気温は　"
@@ -211,6 +224,41 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
 
             j++;
         }
+    }
+
+    // 天気アイコンクリックで最高・最低・平均気温をオーバーレイ表示(もう一度押すと閉じる)
+    private void toggleForecastDetail(ImageView icon, Weather.Daily d) {
+        if (forecastDetailPopup != null && forecastDetailPopup.isShowing()) {
+            boolean sameIcon = forecastDetailIconSource == icon;
+            forecastDetailPopup.hide();
+            forecastDetailPopup = null;
+            forecastDetailIconSource = null;
+            if (sameIcon) return;
+        }
+
+        VBox content = new VBox(6,
+            createDetailLine("最高(昼)", d.temp_max),
+            createDetailLine("最低(朝)", d.temp_min),
+            createDetailLine("平均", d.temp_day));
+        content.setPadding(new Insets(14));
+        content.setStyle("-fx-background-color: rgba(20,20,20,0.85); -fx-background-radius: 10;");
+
+        Popup popup = new Popup();
+        popup.setAutoHide(true);
+        popup.getContent().add(content);
+
+        Point2D anchor = icon.localToScreen(0, icon.getBoundsInLocal().getHeight());
+        popup.show(icon, anchor.getX(), anchor.getY() + 8);
+
+        forecastDetailPopup = popup;
+        forecastDetailIconSource = icon;
+    }
+
+    private Label createDetailLine(String name, double kelvin) {
+        Label l = new Label(name + "  " + String.format("%.1f℃", kelvin - 273.15));
+        l.setTextFill(Color.WHITE);
+        l.setStyle("-fx-font-size: 18px;");
+        return l;
     }
 
     @Override

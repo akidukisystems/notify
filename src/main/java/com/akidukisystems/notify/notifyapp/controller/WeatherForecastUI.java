@@ -1,6 +1,7 @@
 package com.akidukisystems.notify.notifyapp.controller;
 
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
@@ -30,6 +31,7 @@ public class WeatherForecastUI {
         iconView.setFitWidth(64);
         iconView.setFitHeight(64);
         iconView.setEffect(ds);
+        iconView.setCursor(Cursor.HAND);
 
         box = new VBox(10, dayLabel, iconView, label);
         box.setAlignment(Pos.CENTER);
