@@ -126,7 +126,7 @@ public class ctrl {
         });
 
         Button configButton = new Button();
-        configButton.setGraphic(createIcon("/icons/svg/fs.svg", 20, Color.WHITE));
+        configButton.setGraphic(createIcon("/icons/svg/settings.svg", 20, Color.WHITE));
         configButton.setPrefWidth(20);
         configButton.setPrefHeight(20);
         configButton.setOnAction(e -> {
