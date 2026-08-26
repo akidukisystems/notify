@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-  <!-- clock face -->
-  <circle cx="108" cy="132" r="76" stroke-width="7"/>
+  <!-- clock face, drawn as an open ring with a gap left for the photo badge -->
+  <path d="M134,203.4 A76,76 0 1 1 183.1,144" stroke-width="7"/>
 
   <!-- hour ticks (12/3/6/9) -->
   <line x1="108" y1="56" x2="108" y2="68" stroke-width="6"/>
@@ -27,11 +27,8 @@
   <!-- cloud accent, drifting across the lower rim -->
   <path d="M26.6,214 A17,17 0 0 1 26.6,180 A21.3,21.3 0 0 1 67.4,173.2 A18.7,18.7 0 0 1 94.6,192.8 A15.3,15.3 0 0 1 92,214 Z" stroke-width="6"/>
 
-  <!-- landscape photo badge, drawn last so it sits in front where it overlaps the clock;
-       fixed light card + dark ink so it stays readable on both light and dark grounds -->
-  <g stroke="#1A1A1A">
-    <rect x="140" y="150" width="70" height="56" rx="10" fill="#FFFFFF" stroke-width="6"/>
-    <circle cx="156" cy="164" r="6" stroke-width="4"/>
-    <path d="M148,198 L167,174 L179,188 L193,168 L202,198" stroke-width="5"/>
-  </g>
+  <!-- landscape photo badge, sitting in the gap left in the clock ring -->
+  <rect x="140" y="150" width="70" height="56" rx="10" stroke-width="6"/>
+  <circle cx="156" cy="164" r="6" stroke-width="4"/>
+  <path d="M148,198 L167,174 L179,188 L193,168 L202,198" stroke-width="5"/>
 </svg>
