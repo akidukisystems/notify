@@ -16,7 +16,7 @@
   - 壁紙から自動抽出、またはメタデータ指定のテーマカラーをUI全体に反映
 - **ナイトモード**(画面全体を暗くし、時計の秒表示をフェードアウト)
 - **UI左右反転**(焼き付き防止のため、一定周期で表示位置を左右に切り替え)
-- **Bluetoothマウスのバッテリー残量表示**(Windows専用、PowerShell経由で取得)
+- **Bluetoothマウスのバッテリー残量表示**(PowerShell経由で取得するためWindows限定。他OSでは自動的に非表示になります)
 - **設定画面**(アプリ右下の歯車アイコンから起動)
   - 壁紙フォルダ・壁紙メタデータのパス
   - 緯度・経度、気象警報の地域コード・地域名
@@ -27,9 +27,9 @@
 
 ## 動作環境
 
-- Windows(バッテリー残量取得にPowerShellを使用するためWindows専用)
 - Java 25
 - Maven(同梱の `mvnw` / `mvnw.cmd` を利用可能)
+- Windows以外でも動作しますが、バッテリー残量表示のみWindows限定です(他OSではその項目が表示されません)
 
 ## ビルド・実行
 
@@ -42,6 +42,6 @@ java -jar target/notify-0.0.1-SNAPSHOT.jar
 
 ## 設定ファイル
 
-初回起動時に `%APPDATA%\NotifyApp\settings.json` が作成され、以後の起動時はこのファイルから設定を読み込みます。上記「設定画面」から変更した内容もここに保存されます。
+初回起動時に `%APPDATA%\NotifyApp\settings.json`(Windows以外では `~/.notifyapp/settings.json`)が作成され、以後の起動時はこのファイルから設定を読み込みます。上記「設定画面」から変更した内容もここに保存されます。
 
-OpenWeatherのAPIキーは `%APPDATA%\NotifyApp\apikey.json` に別ファイルとして保存されます(リポジトリには含めません)。
+OpenWeatherのAPIキーは同じフォルダの `apikey.json` に別ファイルとして保存されます(リポジトリには含めません)。

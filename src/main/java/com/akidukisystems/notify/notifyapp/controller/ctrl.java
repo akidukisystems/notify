@@ -62,6 +62,10 @@ public class ctrl {
     private Timeline refreshWeatherTimeline;
     private Timeline reverseUITimeline;
 
+    // バッテリー残量取得はPowerShell経由のためWindows専用。他OSでは表示・取得ともに行わない
+    private static final boolean IS_WINDOWS =
+        System.getProperty("os.name", "").toLowerCase().contains("win");
+
     // GUI から親をセット
     public void setClass(Weather weather, Configure configure) {
         this.weather = weather;
@@ -155,7 +159,10 @@ public class ctrl {
 
         buttonsBox = new HBox(10);
         buttonsBox.setAlignment(Pos.CENTER);
-        buttonsBox.getChildren().addAll(batteryUIController.getNode(), changeWallpaperButton, changeNightModeButton, setFullScreenButton, configButton, hideToTrayButton);
+        if (IS_WINDOWS) {
+            buttonsBox.getChildren().add(batteryUIController.getNode());
+        }
+        buttonsBox.getChildren().addAll(changeWallpaperButton, changeNightModeButton, setFullScreenButton, configButton, hideToTrayButton);
 
 
         // 左上にくっつける
@@ -234,7 +241,9 @@ public class ctrl {
                 Platform.runLater(() -> {
                     weatherUIController.update();
                     alertUIController.update();
-                    batteryUIController.refresh();
+                    if (IS_WINDOWS) {
+                        batteryUIController.refresh();
+                    }
                 });
             });
     }
