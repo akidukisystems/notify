@@ -122,7 +122,15 @@ public class ctrl {
         setFullScreenButton.setPrefWidth(20);
         setFullScreenButton.setPrefHeight(20);
         setFullScreenButton.setOnAction(e -> {
-            setFullScreen(true);
+            setFullScreen(!GUI.stage.isFullScreen());
+        });
+
+        // GUI.stageはcontroller初期化完了後に設定されるため、次のパルスまで待って購読する
+        Platform.runLater(() -> {
+            GUI.stage.fullScreenProperty().addListener((obs, wasFullScreen, isFullScreen) -> {
+                String iconPath = isFullScreen ? "/icons/svg/fullscreen_exit.svg" : "/icons/svg/fs.svg";
+                setFullScreenButton.setGraphic(createIcon(iconPath, 20, Color.WHITE));
+            });
         });
 
         Button configButton = new Button();
@@ -132,10 +140,18 @@ public class ctrl {
         configButton.setOnAction(e -> {
             new SettingsController(configure).show();
         });
-        
+
+        Button hideToTrayButton = new Button();
+        hideToTrayButton.setGraphic(createIcon("/icons/svg/minimize.svg", 20, Color.WHITE));
+        hideToTrayButton.setPrefWidth(20);
+        hideToTrayButton.setPrefHeight(20);
+        hideToTrayButton.setOnAction(e -> {
+            GUI.stage.hide();
+        });
+
         buttonsBox = new HBox(10);
         buttonsBox.setAlignment(Pos.CENTER);
-        buttonsBox.getChildren().addAll(batteryUIController.getNode(), changeWallpaperButton, changeNightModeButton, setFullScreenButton, configButton);
+        buttonsBox.getChildren().addAll(batteryUIController.getNode(), changeWallpaperButton, changeNightModeButton, setFullScreenButton, configButton, hideToTrayButton);
 
 
         // 左上にくっつける
@@ -303,7 +319,7 @@ public class ctrl {
     }
 
     private void setFullScreen(boolean isFullscreen) {
-        GUI.stage.setFullScreen(true);
+        GUI.stage.setFullScreen(isFullscreen);
     }
 
     // UIを左右反転させる

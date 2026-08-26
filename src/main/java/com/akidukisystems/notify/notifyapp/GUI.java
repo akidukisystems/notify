@@ -44,10 +44,11 @@ public class GUI extends Application {
         GUI.stage = stage;
 
         stage.setScene(scene);
-        stage.setFullScreen(true);
         stage.setFullScreenExitHint("");
         stage.setTitle("壁紙プレビュー");
         stage.show();
+
+        new TrayManager().install(stage);
     }
 
     public static void launchApp(String[] args) {
