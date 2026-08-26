@@ -59,6 +59,10 @@ public class ctrl {
     private AlertUIController alertUIController;
     private WallpaperController wallpaperController;
 
+    private Timeline wallpaperTimeline;
+    private Timeline refreshWeatherTimeline;
+    private Timeline reverseUITimeline;
+
     // GUI から親をセット
     public void setClass(Weather weather, Configure configure) {
         this.weather = weather;
@@ -147,6 +151,7 @@ public class ctrl {
         hideToTrayButton.setPrefHeight(20);
         hideToTrayButton.setOnAction(e -> {
             GUI.stage.hide();
+            pauseBackgroundUpdates();
         });
 
         buttonsBox = new HBox(10);
@@ -171,7 +176,7 @@ public class ctrl {
         rootPane.getChildren().add(clockPane);
 
         // 壁紙切替
-        Timeline wallpaperTimeline = new Timeline(
+        wallpaperTimeline = new Timeline(
             new KeyFrame(Duration.seconds(configure.getWallpaperChangeSecond()), e -> wallpaperController.switchWallpaper())
         );
         wallpaperTimeline.setCycleCount(Timeline.INDEFINITE);
@@ -180,20 +185,39 @@ public class ctrl {
         System.out.println(configure.getRefreshWeatherSecond());
 
         // お天気更新
-        Timeline refreshWeather = new Timeline(
+        refreshWeatherTimeline = new Timeline(
             new KeyFrame(Duration.seconds(configure.getRefreshWeatherSecond()), e -> updateWeatherUI())
         );
-        refreshWeather.setCycleCount(Timeline.INDEFINITE);
-        refreshWeather.play();
+        refreshWeatherTimeline.setCycleCount(Timeline.INDEFINITE);
+        refreshWeatherTimeline.play();
 
         // UI左右反転
-        Timeline reverseUI = new Timeline(
+        reverseUITimeline = new Timeline(
             new KeyFrame(Duration.seconds(configure.getReverseUISecond()), e -> reverseUI())
         );
-        reverseUI.setCycleCount(Timeline.INDEFINITE);
-        reverseUI.play();
+        reverseUITimeline.setCycleCount(Timeline.INDEFINITE);
+        reverseUITimeline.play();
 
         // 初回更新
+        updateWeatherUI();
+    }
+
+    // トレイ格納中は時計・壁紙更新・天気更新・UI反転を止める(バッテリー取得は天気更新に連動)
+    public void pauseBackgroundUpdates() {
+        clockController.pause();
+        wallpaperTimeline.pause();
+        refreshWeatherTimeline.pause();
+        reverseUITimeline.pause();
+    }
+
+    public void resumeBackgroundUpdates() {
+        clockController.resume();
+        wallpaperTimeline.play();
+        refreshWeatherTimeline.play();
+        reverseUITimeline.play();
+
+        // 格納中に古くなっている可能性があるため、天気・警報・バッテリーは復元時に即時更新する
+        // (updateWeatherUIはラベル/アイコンを直接差し替えるだけでアニメーションは挟まない)
         updateWeatherUI();
     }
 

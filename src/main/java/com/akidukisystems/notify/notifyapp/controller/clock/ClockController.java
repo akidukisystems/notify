@@ -64,7 +64,25 @@ public class ClockController implements ThemeManager.ThemeListener {
     public HBox getSecBox() { return secBox; } // 夜間モードのfadeOut対象として引き続き必要
     public Label getDateLabel() { return dateLabel; }
 
+    private boolean running = false;
+    private Timeline tickTimeline;
+
     public void start() {
+        running = true;
+        scheduleNextTick();
+    }
+
+    // トレイ格納中などに時刻更新を止める
+    public void pause() {
+        running = false;
+        if (tickTimeline != null) {
+            tickTimeline.stop();
+        }
+    }
+
+    public void resume() {
+        if (running) return;
+        running = true;
         scheduleNextTick();
     }
 
@@ -72,12 +90,12 @@ public class ClockController implements ThemeManager.ThemeListener {
         LocalDateTime now = LocalDateTime.now();
         long delay = 1000 - now.getNano() / 1_000_000;
 
-        Timeline t = new Timeline(new KeyFrame(Duration.millis(delay), e -> {
+        tickTimeline = new Timeline(new KeyFrame(Duration.millis(delay), e -> {
             updateClock();
-            scheduleNextTick();
+            if (running) scheduleNextTick();
         }));
-        t.setCycleCount(1);
-        t.play();
+        tickTimeline.setCycleCount(1);
+        tickTimeline.play();
     }
 
     private void updateClock() {

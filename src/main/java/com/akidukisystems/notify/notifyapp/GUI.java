@@ -48,7 +48,7 @@ public class GUI extends Application {
         stage.setTitle("壁紙プレビュー");
         stage.show();
 
-        new TrayManager().install(stage);
+        new TrayManager().install(stage, controller::pauseBackgroundUpdates, controller::resumeBackgroundUpdates);
     }
 
     public static void launchApp(String[] args) {

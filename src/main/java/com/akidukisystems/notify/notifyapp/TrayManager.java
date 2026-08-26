@@ -23,7 +23,8 @@ public class TrayManager {
 
     private TrayIcon trayIcon;
 
-    public void install(Stage stage) {
+    // onHide: 非表示になった直後、onShow: 表示に復帰した直後に呼ばれる(バックグラウンド更新の一時停止/再開などに利用)
+    public void install(Stage stage, Runnable onHide, Runnable onShow) {
         if (!SystemTray.isSupported()) {
             System.out.println("システムトレイはサポートされていません");
             return;
@@ -35,10 +36,16 @@ public class TrayManager {
         PopupMenu popup = new PopupMenu();
 
         MenuItem openItem = new MenuItem("開く");
-        openItem.addActionListener(e -> Platform.runLater(() -> showStage(stage)));
+        openItem.addActionListener(e -> Platform.runLater(() -> {
+            showStage(stage);
+            if (onShow != null) onShow.run();
+        }));
 
         MenuItem maximizeItem = new MenuItem("最大化");
-        maximizeItem.addActionListener(e -> Platform.runLater(() -> maximizeStage(stage)));
+        maximizeItem.addActionListener(e -> Platform.runLater(() -> {
+            maximizeStage(stage);
+            if (onShow != null) onShow.run();
+        }));
 
         MenuItem exitItem = new MenuItem("終了");
         exitItem.addActionListener(e -> Platform.runLater(this::exitApp));
@@ -54,7 +61,10 @@ public class TrayManager {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() >= 2) {
-                    Platform.runLater(() -> showStage(stage));
+                    Platform.runLater(() -> {
+                        showStage(stage);
+                        if (onShow != null) onShow.run();
+                    });
                 }
             }
         });
@@ -69,6 +79,17 @@ public class TrayManager {
         stage.setOnCloseRequest(e -> {
             e.consume();
             hideStage(stage);
+            if (onHide != null) onHide.run();
+        });
+
+        // タイトルバーの最小化(タスクバーへの格納)も、トレイへの格納に統一する
+        stage.iconifiedProperty().addListener((obs, wasIconified, isIconified) -> {
+            if (isIconified) {
+                Platform.runLater(() -> {
+                    hideStage(stage);
+                    if (onHide != null) onHide.run();
+                });
+            }
         });
     }
 
@@ -77,11 +98,13 @@ public class TrayManager {
     }
 
     private void showStage(Stage stage) {
+        stage.setIconified(false);
         stage.show();
         stage.toFront();
     }
 
     private void maximizeStage(Stage stage) {
+        stage.setIconified(false);
         stage.show();
         stage.toFront();
         stage.setFullScreen(true);
