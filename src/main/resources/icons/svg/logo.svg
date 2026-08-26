@@ -27,8 +27,11 @@
   <!-- cloud accent, drifting across the lower rim -->
   <path d="M26.6,214 A17,17 0 0 1 26.6,180 A21.3,21.3 0 0 1 67.4,173.2 A18.7,18.7 0 0 1 94.6,192.8 A15.3,15.3 0 0 1 92,214 Z" stroke-width="6"/>
 
-  <!-- landscape photo badge, drawn last so it sits in front where it overlaps the clock -->
-  <rect x="140" y="150" width="70" height="56" rx="10" fill="#FFFFFF" stroke-width="6"/>
-  <circle cx="156" cy="164" r="6" stroke-width="4"/>
-  <path d="M148,198 L167,174 L179,188 L193,168 L202,198" stroke-width="5"/>
+  <!-- landscape photo badge, drawn last so it sits in front where it overlaps the clock;
+       fixed light card + dark ink so it stays readable on both light and dark grounds -->
+  <g stroke="#1A1A1A">
+    <rect x="140" y="150" width="70" height="56" rx="10" fill="#FFFFFF" stroke-width="6"/>
+    <circle cx="156" cy="164" r="6" stroke-width="4"/>
+    <path d="M148,198 L167,174 L179,188 L193,168 L202,198" stroke-width="5"/>
+  </g>
 </svg>
