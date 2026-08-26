@@ -12,8 +12,9 @@ public class ThemeManager {
         void onThemeChanged(Color textColor, Color wbColor, DropShadow shadow);
     }
 
-    private Color fixedTextColor;
-    private Color wbColor;
+    // 壁紙からの色抽出は非同期で後から届くため、それまでの間もLabel生成時にnullにならないよう既定色を持たせる
+    private Color fixedTextColor = Color.WHITE;
+    private Color wbColor = Color.BLACK;
     private double fontScale = 1.0;
 
     // 使い回す1個だけのインスタンス。以後は中身(色)だけ書き換える
@@ -21,14 +22,12 @@ public class ThemeManager {
 
     private final List<ThemeListener> listeners = new ArrayList<>();
 
-    public void addListener(ThemeListener listener) {
-        listeners.add(listener);
+    public ThemeManager() {
+        updateShadowColor();
     }
 
-    public void initColors(Color textColor, Color wbColor) {
-        this.fixedTextColor = textColor;
-        this.wbColor = wbColor;
-        updateShadowColor();
+    public void addListener(ThemeListener listener) {
+        listeners.add(listener);
     }
 
     public void applyColors(Color textColor, Color wbColor) {

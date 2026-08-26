@@ -2,6 +2,7 @@ package com.akidukisystems.notify.notifyapp.controller;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.function.BiConsumer;
 
 import com.akidukisystems.notify.notifyapp.Configure;
 import com.akidukisystems.notify.notifyapp.GUI;
@@ -66,6 +67,15 @@ public class ctrl {
     private static final boolean IS_WINDOWS =
         System.getProperty("os.name", "").toLowerCase().contains("win");
 
+    private BiConsumer<Integer, Integer> wallpaperProgressListener;
+    private Runnable wallpaperReadyListener;
+
+    // GUI(スプラッシュ画面)から、壁紙読み込みの進捗コールバックをsetClassより前に登録する
+    public void setWallpaperLoadListener(BiConsumer<Integer, Integer> onProgress, Runnable onReady) {
+        this.wallpaperProgressListener = onProgress;
+        this.wallpaperReadyListener = onReady;
+    }
+
     // GUI から親をセット
     public void setClass(Weather weather, Configure configure) {
         this.weather = weather;
@@ -83,7 +93,8 @@ public class ctrl {
 
         themeManager = new ThemeManager();
         themeManager.setFontScale(configure.getFontScale());
-        wallpaperController = new WallpaperController(rootPane, configure, themeManager, screenWidth, screenHeight);
+        wallpaperController = new WallpaperController(rootPane, configure, themeManager, screenWidth, screenHeight,
+            wallpaperProgressListener, wallpaperReadyListener);
 
         clockController = new ClockController(themeManager);
         clockController.start();

@@ -35,6 +35,19 @@ public class GUI extends Application {
         Parent root = loader.load();
 
         ctrl controller = loader.getController();
+
+        // 壁紙読み込み中は枠無しのスプラッシュ画面を表示し、半数読み込めたら本体ウィンドウに切り替える
+        SplashScreen splash = new SplashScreen();
+        splash.show();
+
+        controller.setWallpaperLoadListener(splash::updateProgress, () -> {
+            splash.close();
+
+            GUI.stage.show();
+            GUI.trayManager = new TrayManager();
+            GUI.trayManager.install(GUI.stage, controller::pauseBackgroundUpdates, controller::resumeBackgroundUpdates);
+        });
+
         controller.setClass(GUI.staticWeather, GUI.staticConfigure);
 
         Scene scene = new Scene(root, 1920, 1080);
@@ -47,10 +60,6 @@ public class GUI extends Application {
         stage.setScene(scene);
         stage.setFullScreenExitHint("");
         stage.setTitle("壁紙プレビュー");
-        stage.show();
-
-        GUI.trayManager = new TrayManager();
-        GUI.trayManager.install(stage, controller::pauseBackgroundUpdates, controller::resumeBackgroundUpdates);
     }
 
     public static void launchApp(String[] args) {

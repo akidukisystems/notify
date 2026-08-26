@@ -45,3 +45,7 @@ java -jar target/notify-0.0.1-SNAPSHOT.jar
 初回起動時に `%APPDATA%\NotifyApp\settings.json`(Windows以外では `~/.notifyapp/settings.json`)が作成され、以後の起動時はこのファイルから設定を読み込みます。上記「設定画面」から変更した内容もここに保存されます。
 
 OpenWeatherのAPIキーは同じフォルダの `apikey.json` に別ファイルとして保存されます(リポジトリには含めません)。
+
+## AI生成物について
+
+このリポジトリのコードおよびロゴ画像には、Claude(Anthropic)によるAI生成・AI支援の成果物が含まれています。実装内容はすべて開発者がレビュー・検証した上で採用しています。

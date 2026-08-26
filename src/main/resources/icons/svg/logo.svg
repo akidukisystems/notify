@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+  <!-- clock face, drawn as an open ring with a gap left for the photo badge -->
+  <path d="M134,203.4 A76,76 0 1 1 183.1,144" stroke-width="7"/>
+
+  <!-- hour ticks (12/3/6/9) -->
+  <line x1="108" y1="56" x2="108" y2="68" stroke-width="6"/>
+  <line x1="184" y1="132" x2="172" y2="132" stroke-width="6"/>
+  <line x1="108" y1="208" x2="108" y2="196" stroke-width="6"/>
+  <line x1="32" y1="132" x2="44" y2="132" stroke-width="6"/>
+
+  <!-- hands: 10:10 -->
+  <line x1="108" y1="132" x2="72" y2="111" stroke-width="7"/>
+  <line x1="108" y1="132" x2="158" y2="103" stroke-width="7"/>
+  <circle cx="108" cy="132" r="5" fill="#000000" stroke="none"/>
+
+  <!-- sun accent, peeking from behind the rim -->
+  <circle cx="162" cy="54" r="15" stroke-width="5"/>
+  <line x1="182" y1="54" x2="191" y2="54" stroke-width="5"/>
+  <line x1="176.1" y1="68.1" x2="182.5" y2="74.5" stroke-width="5"/>
+  <line x1="162" y1="74" x2="162" y2="83" stroke-width="5"/>
+  <line x1="147.9" y1="68.1" x2="141.5" y2="74.5" stroke-width="5"/>
+  <line x1="142" y1="54" x2="133" y2="54" stroke-width="5"/>
+  <line x1="147.9" y1="39.9" x2="141.5" y2="33.5" stroke-width="5"/>
+  <line x1="162" y1="34" x2="162" y2="25" stroke-width="5"/>
+  <line x1="176.1" y1="39.9" x2="182.5" y2="33.5" stroke-width="5"/>
+
+  <!-- cloud accent, drifting across the lower rim -->
+  <path d="M26.6,214 A17,17 0 0 1 26.6,180 A21.3,21.3 0 0 1 67.4,173.2 A18.7,18.7 0 0 1 94.6,192.8 A15.3,15.3 0 0 1 92,214 Z" stroke-width="6"/>
+
+  <!-- landscape photo badge, sitting in the gap left in the clock ring -->
+  <rect x="140" y="150" width="70" height="56" rx="10" stroke-width="6"/>
+  <circle cx="156" cy="164" r="6" stroke-width="4"/>
+  <path d="M148,198 L167,174 L179,188 L193,168 L202,198" stroke-width="5"/>
+</svg>

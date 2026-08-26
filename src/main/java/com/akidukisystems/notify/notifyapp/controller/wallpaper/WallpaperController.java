@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 import com.akidukisystems.notify.notifyapp.ColorHelper;
@@ -16,6 +17,7 @@ import com.akidukisystems.notify.notifyapp.Configure.WallpaperColor;
 import com.akidukisystems.notify.notifyapp.controller.theme.ThemeManager;
 
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
@@ -31,25 +33,55 @@ public class WallpaperController {
     private final Configure configure;
     private final ThemeManager themeManager;
     private final ColorHelper colorHelper = new ColorHelper();
+    private final StackPane rootPane;
+    private final double screenWidth;
+    private final double screenHeight;
 
     private final List<ImageView> bgViews = new ArrayList<>();
     private final List<ImageView> fgViews = new ArrayList<>();
     private final List<String> wallpaperFiles = new ArrayList<>();
 
-    private int currentWallpaperIndex = 0;
+    private int currentWallpaperIndex = -1;
     private boolean isSwitchingWallpaper = false;
 
+    private int loadedCount = 0;
+    private boolean halfLoadedNotified = false;
+
+    // onProgress: (読込済み数, 総数) を都度通知。onHalfLoaded: 半数読み込めた時点で1回だけ呼ばれる
+    private final BiConsumer<Integer, Integer> onProgress;
+    private final Runnable onHalfLoaded;
+
     public WallpaperController(StackPane rootPane, Configure configure, ThemeManager themeManager,
-                                double screenWidth, double screenHeight) {
+                                double screenWidth, double screenHeight,
+                                BiConsumer<Integer, Integer> onProgress, Runnable onHalfLoaded) {
+        this.rootPane = rootPane;
         this.configure = configure;
         this.themeManager = themeManager;
+        this.screenWidth = screenWidth;
+        this.screenHeight = screenHeight;
+        this.onProgress = onProgress;
+        this.onHalfLoaded = onHalfLoaded;
 
-        loadWallpapers(rootPane, screenWidth, screenHeight);
-        applyInitialColors();
+        listWallpaperFiles();
+
+        if (wallpaperFiles.isEmpty()) {
+            if (onHalfLoaded != null) onHalfLoaded.run();
+            return;
+        }
+
+        // bgViews/fgViewsは読み込み済みのものだけ埋まる。未読込みはnullのまま
+        for (int i = 0; i < wallpaperFiles.size(); i++) {
+            bgViews.add(null);
+            fgViews.add(null);
+        }
+
+        int initialIndex = pickInitialIndex();
+        currentWallpaperIndex = initialIndex;
+
+        startBackgroundLoading(initialIndex);
     }
 
-    private void loadWallpapers(StackPane rootPane, double screenWidth, double screenHeight) {
-        List<String> paths = new ArrayList<>();
+    private void listWallpaperFiles() {
         Path dir = Paths.get(configure.getWallpaperPath());
 
         try (Stream<Path> stream = Files.list(dir)) {
@@ -59,28 +91,55 @@ public class WallpaperController {
                     String name = p.getFileName().toString().toLowerCase();
                     return name.endsWith(".jpg") || name.endsWith(".png");
                 })
-                .forEach(p -> {
-                    wallpaperFiles.add(p.getFileName().toString());
-                    paths.add(p.toUri().toString());
-                });
+                .forEach(p -> wallpaperFiles.add(p.getFileName().toString()));
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
-        for (String path : paths) {
-            Image image = new Image(path);
+    // 壁紙を1枚ずつバックグラウンドスレッドで読み込み、都度JavaFXスレッドへ反映する
+    private void startBackgroundLoading(int initialIndex) {
+        List<Integer> order = new ArrayList<>();
+        order.add(initialIndex);
+        for (int i = 0; i < wallpaperFiles.size(); i++) {
+            if (i != initialIndex) order.add(i);
+        }
+
+        Thread loaderThread = new Thread(() -> {
+            for (int index : order) {
+                String fileName = wallpaperFiles.get(index);
+                String uri = Paths.get(configure.getWallpaperPath(), fileName).toUri().toString();
+
+                Image image = null;
+                try {
+                    image = new Image(uri);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                Image loaded = image;
+                Platform.runLater(() -> onWallpaperLoaded(index, loaded, index == initialIndex));
+            }
+        }, "wallpaper-loader");
+
+        loaderThread.setDaemon(true);
+        loaderThread.start();
+    }
+
+    private void onWallpaperLoaded(int index, Image image, boolean isInitial) {
+        loadedCount++;
+
+        if (image != null) {
+            double imageRatio = image.getWidth() / image.getHeight();
+            double screenRatio = screenWidth / screenHeight;
+            double scaleFactor = 1.10;
+
             ImageView bgView = new ImageView(image);
-            bgViews.add(bgView);
-
             GaussianBlur blur = new GaussianBlur(configure.getBlur());
             ColorAdjust darken = new ColorAdjust();
             darken.setBrightness(-0.1);
             blur.setInput(darken);
             bgView.setEffect(blur);
-
-            double imageRatio = image.getWidth() / image.getHeight();
-            double screenRatio = screenWidth / screenHeight;
-            double scaleFactor = 1.10;
 
             if (imageRatio > screenRatio) {
                 bgView.setFitHeight(screenHeight * scaleFactor);
@@ -92,18 +151,35 @@ public class WallpaperController {
 
             ImageView fgView = new ImageView(image);
             fgView.setPreserveRatio(true);
-
             if (imageRatio > screenRatio) fgView.setFitWidth(screenWidth);
             else fgView.setFitHeight(screenHeight);
 
-            fgView.setOpacity(0);
-            bgView.setOpacity(0);
-            fgViews.add(fgView);
-            rootPane.getChildren().addAll(bgView, fgView);
+            bgView.setOpacity(isInitial ? 1.0 : 0.0);
+            fgView.setOpacity(isInitial ? 1.0 : 0.0);
+
+            bgViews.set(index, bgView);
+            fgViews.set(index, fgView);
+
+            // 常に一番奥(index 0)へ挿入し、後から読み込まれた壁紙が時計・天気UIを覆わないようにする
+            rootPane.getChildren().addAll(0, java.util.List.of(bgView, fgView));
+
+            if (isInitial) {
+                applyInitialColors();
+            }
         }
 
-        fgViews.get(currentWallpaperIndex).setOpacity(1.0);
-        bgViews.get(currentWallpaperIndex).setOpacity(1.0);
+        updateLoadingProgress();
+    }
+
+    private void updateLoadingProgress() {
+        int total = wallpaperFiles.size();
+
+        if (onProgress != null) onProgress.accept(loadedCount, total);
+
+        if (!halfLoadedNotified && loadedCount >= (total + 1) / 2) {
+            halfLoadedNotified = true;
+            if (onHalfLoaded != null) onHalfLoaded.run();
+        }
     }
 
     private void applyInitialColors() {
@@ -123,23 +199,29 @@ public class WallpaperController {
             wbColor = colors[0];
         }
 
-        themeManager.initColors(textColor, wbColor);
+        // 非同期読み込みのため、Clock/Weather/Battery等のリスナーは既に登録済み。applyColorsで確実に通知する
+        themeManager.applyColors(textColor, wbColor);
     }
 
     public void switchWallpaper() {
-        if (fgViews.isEmpty()) return;
+        if (currentWallpaperIndex == -1 || fgViews.get(currentWallpaperIndex) == null) return;
         if (isSwitchingWallpaper) return;
+
+        List<String> loadedFiles = new ArrayList<>();
+        for (int i = 0; i < wallpaperFiles.size(); i++) {
+            if (bgViews.get(i) != null) loadedFiles.add(wallpaperFiles.get(i));
+        }
+        if (loadedFiles.size() <= 1) return;
 
         isSwitchingWallpaper = true;
 
-        String tag = getTimeTag();
-        if (tag.contains("midnight")) tag = "midnight";
+        String tag = getSimplifiedTimeTag();
 
         List<String> filtered = getWallpapersByTag(tag);
-        filtered.removeIf(f -> !wallpaperFiles.contains(f));
+        filtered.retainAll(loadedFiles);
 
         if (filtered.isEmpty()) {
-            filtered = wallpaperFiles;
+            filtered = new ArrayList<>(loadedFiles);
         }
 
         if (filtered.size() > 1) {
@@ -217,6 +299,18 @@ public class WallpaperController {
         fadeInfg.play();
     }
 
+    private int pickInitialIndex() {
+        String tag = getSimplifiedTimeTag();
+
+        List<String> candidates = getWallpapersByTag(tag);
+        if (candidates.isEmpty()) {
+            candidates = wallpaperFiles;
+        }
+
+        String chosen = candidates.get(new Random().nextInt(candidates.size()));
+        return wallpaperFiles.indexOf(chosen);
+    }
+
     private List<String> getWallpapersByTag(String tag) {
         List<String> result = new ArrayList<>();
 
@@ -234,6 +328,12 @@ public class WallpaperController {
         }
 
         return result;
+    }
+
+    private String getSimplifiedTimeTag() {
+        String tag = getTimeTag();
+        if (tag.contains("midnight")) tag = "midnight";
+        return tag;
     }
 
     private String getTimeTag() {
