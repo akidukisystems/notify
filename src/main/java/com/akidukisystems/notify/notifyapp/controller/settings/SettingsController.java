@@ -202,7 +202,7 @@ public class SettingsController {
             configure.saveApiKey(apiKeyField.getText());
 
             statusLabel.setStyle("-fx-text-fill: green;");
-            statusLabel.setText("保存しました。壁紙フォルダ・各種周期・背景ぼかしは次回起動時に反映されます。");
+            statusLabel.setText("保存しました。壁紙フォルダ・各種周期・背景ぼかし・フォントサイズ倍率は次回起動時に反映されます。");
 
         } catch (NumberFormatException ex) {
             statusLabel.setStyle("-fx-text-fill: red;");

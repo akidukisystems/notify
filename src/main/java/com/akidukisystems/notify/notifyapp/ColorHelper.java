@@ -24,6 +24,11 @@ public class ColorHelper {
             }
         }
 
+        // 0サイズなど異常なスナップショットではNaNになるため、無難な既定色にフォールバックする
+        if (count == 0) {
+            return new Color[]{Color.WHITE, Color.GRAY, Color.WHITE};
+        }
+
         double rAvg = rSum / count;
         double gAvg = gSum / count;
         double bAvg = bSum / count;

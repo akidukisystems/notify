@@ -1,44 +1,22 @@
 package com.akidukisystems.notify.notifyapp.controller;
 
+import org.girod.javafx.svgimage.SVGImage;
 import org.girod.javafx.svgimage.SVGLoader;
-import javafx.scene.Node;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.geometry.Pos;
 
+import javafx.scene.effect.DropShadow;
+import javafx.scene.paint.Color;
+
+// SVGアイコンの読み込み・拡縮・色付け・影付けをまとめる共通ヘルパー
 public class SVGHelper {
 
-    public Node createSVG(String resourcePath, double size, Color color) {
-        try {
-            Node node = SVGLoader.load(getClass().getResource(resourcePath));
+    public SVGIcon createIcon(String resourcePath, double size, Color color, DropShadow shadow) {
+        SVGImage svg = SVGLoader.load(getClass().getResource(resourcePath));
+        SVGImage scaled = svg.scaleTo(size);
 
-            StackPane wrapper = new StackPane(node);
+        SVGIcon icon = new SVGIcon(scaled, size);
+        icon.setColor(color);
+        icon.setEffect(shadow);
 
-            wrapper.setPrefSize(size, size);
-            wrapper.setMinSize(size, size);
-            wrapper.setMaxSize(size, size);
-
-            applyColor(node, color);
-
-            StackPane.setAlignment(node, Pos.CENTER);
-
-            return wrapper;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new StackPane();
-        }
-    }
-
-    private void applyColor(Node node, Color color) {
-        if (node instanceof javafx.scene.shape.Shape shape) {
-            shape.setFill(color);
-        }
-
-        if (node instanceof javafx.scene.Parent parent) {
-            for (Node child : parent.getChildrenUnmodifiable()) {
-                applyColor(child, color);
-            }
-        }
+        return icon;
     }
 }

@@ -14,6 +14,7 @@ public class GUI extends Application {
     private static Configure staticConfigure;
 
     public static Stage stage;
+    public static TrayManager trayManager;
 
     public static void setClass(Weather weather, Configure configure) {
         staticWeather = weather;
@@ -48,7 +49,8 @@ public class GUI extends Application {
         stage.setTitle("壁紙プレビュー");
         stage.show();
 
-        new TrayManager().install(stage, controller::pauseBackgroundUpdates, controller::resumeBackgroundUpdates);
+        GUI.trayManager = new TrayManager();
+        GUI.trayManager.install(stage, controller::pauseBackgroundUpdates, controller::resumeBackgroundUpdates);
     }
 
     public static void launchApp(String[] args) {

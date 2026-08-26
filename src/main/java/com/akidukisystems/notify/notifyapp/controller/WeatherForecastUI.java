@@ -14,13 +14,13 @@ public class WeatherForecastUI {
     public ImageView iconView;
     public VBox box;
 
-    public WeatherForecastUI(String dayText, Color textColor, DropShadow ds) {
+    public WeatherForecastUI(String dayText, Color textColor, DropShadow ds, double fontScale) {
         dayLabel = new Label(dayText);
         label = new Label("晴れ");
         iconView = new ImageView();
 
-        dayLabel.setStyle("-fx-font-size: 22px;");
-        label.setStyle("-fx-font-size: 24px;");
+        dayLabel.setStyle("-fx-font-size: " + (22 * fontScale) + "px;");
+        label.setStyle("-fx-font-size: " + (24 * fontScale) + "px;");
 
         dayLabel.setTextFill(textColor);
         label.setTextFill(textColor);

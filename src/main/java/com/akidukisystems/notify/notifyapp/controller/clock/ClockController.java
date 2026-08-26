@@ -138,7 +138,7 @@ public class ClockController implements ThemeManager.ThemeListener {
 
     private Label createLabel(String text, int size) {
         Label l = new Label(text);
-        l.setStyle("-fx-font-size: " + size + "px;");
+        l.setStyle("-fx-font-size: " + (size * themeManager.getFontScale()) + "px;");
         l.setTextFill(themeManager.getTextColor());
         l.setEffect(themeManager.getShadow());
         return l;

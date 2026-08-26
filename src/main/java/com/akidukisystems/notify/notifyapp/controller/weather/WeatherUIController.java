@@ -6,12 +6,10 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.akidukisystems.notify.notifyapp.Weather;
+import com.akidukisystems.notify.notifyapp.controller.SVGHelper;
 import com.akidukisystems.notify.notifyapp.controller.SVGIcon;
 import com.akidukisystems.notify.notifyapp.controller.WeatherForecastUI;
 import com.akidukisystems.notify.notifyapp.controller.theme.ThemeManager;
-
-import org.girod.javafx.svgimage.SVGImage;
-import org.girod.javafx.svgimage.SVGLoader;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -40,6 +38,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
     private final Consumer<String> messageConsumer;
     private final Supplier<Boolean> isPastedDaySupplier;
     private final List<Label> allLabels = new ArrayList<>();
+    private final SVGHelper svgHelper = new SVGHelper();
 
     private final String[] dayString = {"今日", "明日", "明後日", "3日後", "4日後", "5日後"};
 
@@ -138,7 +137,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         // 予報3日分
         forecasts = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            forecasts.add(new WeatherForecastUI(dayString[i], themeManager.getTextColor(), themeManager.getShadow()));
+            forecasts.add(new WeatherForecastUI(dayString[i], themeManager.getTextColor(), themeManager.getShadow(), themeManager.getFontScale()));
         }
 
         forecastsBox = new HBox(30);
@@ -257,7 +256,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
     private Label createDetailLine(String name, double kelvin) {
         Label l = new Label(name + "  " + String.format("%.1f℃", kelvin - 273.15));
         l.setTextFill(Color.WHITE);
-        l.setStyle("-fx-font-size: 18px;");
+        l.setStyle("-fx-font-size: " + (18 * themeManager.getFontScale()) + "px;");
         return l;
     }
 
@@ -289,7 +288,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
 
     private Label createLabel(String text, int size) {
         Label l = new Label(text);
-        l.setStyle("-fx-font-size: " + size + "px;");
+        l.setStyle("-fx-font-size: " + (size * themeManager.getFontScale()) + "px;");
         l.setTextFill(themeManager.getTextColor());
         l.setEffect(themeManager.getShadow());
         allLabels.add(l); // ← 追加
@@ -311,11 +310,6 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
     }
 
     private SVGIcon createIcon(String path, double size) {
-        SVGImage svg = SVGLoader.load(getClass().getResource(path));
-        SVGImage scaled = svg.scaleTo(size);
-        SVGIcon icon = new SVGIcon(scaled, size);
-        icon.setColor(themeManager.getTextColor());
-        icon.setEffect(themeManager.getShadow());
-        return icon;
+        return svgHelper.createIcon(path, size, themeManager.getTextColor(), themeManager.getShadow());
     }
 }

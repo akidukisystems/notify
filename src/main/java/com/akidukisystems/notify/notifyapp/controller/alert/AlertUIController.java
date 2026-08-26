@@ -25,6 +25,7 @@ public class AlertUIController {
 
     private final Weather weather;
     private final Consumer<String> messageConsumer;
+    private final double fontScale;
 
     private final GridPane alertGridPane;
 
@@ -34,9 +35,10 @@ public class AlertUIController {
     private Popup warningDetailPopup;
     private StackPane warningDetailSource;
 
-    public AlertUIController(Weather weather, Consumer<String> messageConsumer) {
+    public AlertUIController(Weather weather, Consumer<String> messageConsumer, double fontScale) {
         this.weather = weather;
         this.messageConsumer = messageConsumer;
+        this.fontScale = fontScale;
 
         alertGridPane = new GridPane();
         alertGridPane.setHgap(10);
@@ -89,7 +91,7 @@ public class AlertUIController {
         bg.setPrefSize(150, 50);
         bg.setOpacity(0.5);
 
-        typeLabel.setStyle("-fx-font-size: 24px;");
+        typeLabel.setStyle("-fx-font-size: " + (24 * fontScale) + "px;");
         typeLabel.setAlignment(Pos.CENTER);
 
         if (currentMaxSignName.contains("５")) {
@@ -151,13 +153,13 @@ public class AlertUIController {
     private HBox createNotesBlock(List<String> notes) {
         Label header = new Label("特記事項");
         header.setTextFill(Color.WHITE);
-        header.setStyle("-fx-font-size: 18px;");
+        header.setStyle("-fx-font-size: " + (18 * fontScale) + "px;");
 
         VBox notesList = new VBox(2);
         for (String note : notes) {
             Label noteLabel = new Label(note);
             noteLabel.setTextFill(Color.WHITE);
-            noteLabel.setStyle("-fx-font-size: 18px;");
+            noteLabel.setStyle("-fx-font-size: " + (18 * fontScale) + "px;");
             notesList.getChildren().add(noteLabel);
         }
 
@@ -167,7 +169,7 @@ public class AlertUIController {
     private Label createDetailLine(String name, String value) {
         Label l = new Label(name + "  " + value);
         l.setTextFill(Color.WHITE);
-        l.setStyle("-fx-font-size: 18px;");
+        l.setStyle("-fx-font-size: " + (18 * fontScale) + "px;");
         return l;
     }
 
@@ -182,7 +184,7 @@ public class AlertUIController {
         bg.setPrefSize(150, 50);
         bg.setOpacity(0.5);
 
-        typeLabel.setStyle("-fx-font-size: 24px;");
+        typeLabel.setStyle("-fx-font-size: " + (24 * fontScale) + "px;");
         typeLabel.setAlignment(Pos.CENTER);
 
         if (warning.getName().contains("特別警報")) {

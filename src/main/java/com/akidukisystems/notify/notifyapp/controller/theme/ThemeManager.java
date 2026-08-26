@@ -14,6 +14,7 @@ public class ThemeManager {
 
     private Color fixedTextColor;
     private Color wbColor;
+    private double fontScale = 1.0;
 
     // 使い回す1個だけのインスタンス。以後は中身(色)だけ書き換える
     private final DropShadow shadow = createBaseShadow();
@@ -61,5 +62,13 @@ public class ThemeManager {
 
     public DropShadow getShadow() {
         return shadow;
+    }
+
+    public void setFontScale(double fontScale) {
+        this.fontScale = fontScale;
+    }
+
+    public double getFontScale() {
+        return fontScale;
     }
 }

@@ -2,8 +2,6 @@ package com.akidukisystems.notify.notifyapp.controller;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import org.girod.javafx.svgimage.SVGImage;
-import org.girod.javafx.svgimage.SVGLoader;
 
 import com.akidukisystems.notify.notifyapp.Configure;
 import com.akidukisystems.notify.notifyapp.GUI;
@@ -43,6 +41,7 @@ public class ctrl {
     private Weather weather;
     private Configure configure;
     private Animation animation;
+    private final SVGHelper svgHelper = new SVGHelper();
 
     private HBox buttonsBox;
     private Label tickerLabel;
@@ -79,13 +78,14 @@ public class ctrl {
         animation = new Animation();
 
         themeManager = new ThemeManager();
+        themeManager.setFontScale(configure.getFontScale());
         wallpaperController = new WallpaperController(rootPane, configure, themeManager, screenWidth, screenHeight);
 
         clockController = new ClockController(themeManager);
         clockController.start();
 
         weatherUIController = new WeatherUIController(themeManager, weather, this::scrollMessage, wallpaperController::isPastedDay);
-        alertUIController = new AlertUIController(weather, this::scrollMessage);
+        alertUIController = new AlertUIController(weather, this::scrollMessage, configure.getFontScale());
         batteryUIController = new BatteryUIController(themeManager, configure.getMouseBatteryDeviceId());
 
         // スクロール
@@ -95,7 +95,7 @@ public class ctrl {
         tickerBox.setPrefHeight(40);
 
         tickerLabel = new Label("文字スクロールテストABCDEabcdeＡＢＣＤＥａｂｃｄｅ012345０１２３４５あいうえお");
-        tickerLabel.setStyle("-fx-font-size: 24px; -fx-text-fill: white;");
+        tickerLabel.setStyle("-fx-font-size: " + (24 * configure.getFontScale()) + "px; -fx-text-fill: white;");
         tickerBox.getChildren().add(tickerLabel);
         tickerBox.setVisible(false);
 
@@ -150,8 +150,7 @@ public class ctrl {
         hideToTrayButton.setPrefWidth(20);
         hideToTrayButton.setPrefHeight(20);
         hideToTrayButton.setOnAction(e -> {
-            GUI.stage.hide();
-            pauseBackgroundUpdates();
+            GUI.trayManager.hideStage();
         });
 
         buttonsBox = new HBox(10);
@@ -216,13 +215,20 @@ public class ctrl {
         refreshWeatherTimeline.play();
         reverseUITimeline.play();
 
-        // 格納中に古くなっている可能性があるため、天気・警報・バッテリーは復元時に即時更新する
+        // 格納中に更新周期を超えて古くなっている場合のみ、天気・警報・バッテリーを即時更新する
         // (updateWeatherUIはラベル/アイコンを直接差し替えるだけでアニメーションは挟まない)
-        updateWeatherUI();
+        long intervalMillis = configure.getRefreshWeatherSecond() * 1000L;
+        if (System.currentTimeMillis() - lastWeatherFetchMillis >= intervalMillis) {
+            updateWeatherUI();
+        }
     }
+
+    private long lastWeatherFetchMillis = 0;
 
     // UI 更新処理
     private void updateWeatherUI() {
+        lastWeatherFetchMillis = System.currentTimeMillis();
+
         weather.fetch()
             .thenRun(() -> {
                 Platform.runLater(() -> {
@@ -374,11 +380,6 @@ public class ctrl {
     }
 
     private SVGIcon createIcon(String path, double size, Color color) {
-        SVGImage svg = SVGLoader.load(getClass().getResource(path));
-        SVGImage scaled = svg.scaleTo(size);
-        SVGIcon icon = new SVGIcon(scaled, size);
-        icon.setColor(color);
-        icon.setEffect(themeManager.getShadow());
-        return icon;
+        return svgHelper.createIcon(path, size, color, themeManager.getShadow());
     }
 }

@@ -22,9 +22,16 @@ import javafx.stage.Stage;
 public class TrayManager {
 
     private TrayIcon trayIcon;
+    private Stage stage;
+    private Runnable onHide;
+    private Runnable onShow;
 
     // onHide: 非表示になった直後、onShow: 表示に復帰した直後に呼ばれる(バックグラウンド更新の一時停止/再開などに利用)
     public void install(Stage stage, Runnable onHide, Runnable onShow) {
+        this.stage = stage;
+        this.onHide = onHide;
+        this.onShow = onShow;
+
         if (!SystemTray.isSupported()) {
             System.out.println("システムトレイはサポートされていません");
             return;
@@ -36,16 +43,10 @@ public class TrayManager {
         PopupMenu popup = new PopupMenu();
 
         MenuItem openItem = new MenuItem("開く");
-        openItem.addActionListener(e -> Platform.runLater(() -> {
-            showStage(stage);
-            if (onShow != null) onShow.run();
-        }));
+        openItem.addActionListener(e -> Platform.runLater(this::showStage));
 
         MenuItem maximizeItem = new MenuItem("最大化");
-        maximizeItem.addActionListener(e -> Platform.runLater(() -> {
-            maximizeStage(stage);
-            if (onShow != null) onShow.run();
-        }));
+        maximizeItem.addActionListener(e -> Platform.runLater(this::maximizeStage));
 
         MenuItem exitItem = new MenuItem("終了");
         exitItem.addActionListener(e -> Platform.runLater(this::exitApp));
@@ -61,10 +62,7 @@ public class TrayManager {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() >= 2) {
-                    Platform.runLater(() -> {
-                        showStage(stage);
-                        if (onShow != null) onShow.run();
-                    });
+                    Platform.runLater(TrayManager.this::showStage);
                 }
             }
         });
@@ -78,36 +76,36 @@ public class TrayManager {
         // ウィンドウの×ボタンなどでの終了要求は、トレイへの格納に読み替える
         stage.setOnCloseRequest(e -> {
             e.consume();
-            hideStage(stage);
-            if (onHide != null) onHide.run();
+            hideStage();
         });
 
         // タイトルバーの最小化(タスクバーへの格納)も、トレイへの格納に統一する
         stage.iconifiedProperty().addListener((obs, wasIconified, isIconified) -> {
             if (isIconified) {
-                Platform.runLater(() -> {
-                    hideStage(stage);
-                    if (onHide != null) onHide.run();
-                });
+                Platform.runLater(this::hideStage);
             }
         });
     }
 
-    public void hideStage(Stage stage) {
+    // すべてのトレイ格納経路(×ボタン/タイトルバー最小化/アプリ内ボタン)がここを通る
+    public void hideStage() {
         stage.hide();
+        if (onHide != null) onHide.run();
     }
 
-    private void showStage(Stage stage) {
+    private void showStage() {
         stage.setIconified(false);
         stage.show();
         stage.toFront();
+        if (onShow != null) onShow.run();
     }
 
-    private void maximizeStage(Stage stage) {
+    private void maximizeStage() {
         stage.setIconified(false);
         stage.show();
         stage.toFront();
         stage.setFullScreen(true);
+        if (onShow != null) onShow.run();
     }
 
     private void exitApp() {
