@@ -135,7 +135,8 @@ public class WallpaperController {
 
     /**
      * 壁紙を1枚ずつバックグラウンドスレッドで読み込み、都度{@link Platform#runLater}経由でJavaFXスレッドへ反映する。
-     * {@code initialIndex}を最初に読み込むよう順序を組み替える。
+     *
+     * @param initialIndex 最初に読み込む壁紙のインデックス(この順序になるよう読み込み順を組み替える)
      */
     private void startBackgroundLoading(int initialIndex) {
         List<Integer> order = new ArrayList<>();
