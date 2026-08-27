@@ -18,7 +18,9 @@ import com.akidukisystems.notify.notifyapp.controller.theme.ThemeManager;
 
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
+import javafx.geometry.Pos;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.control.Label;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.image.Image;
@@ -65,6 +67,7 @@ public class WallpaperController {
         listWallpaperFiles();
 
         if (wallpaperFiles.isEmpty()) {
+            showNoWallpaperMessage();
             if (onHalfLoaded != null) onHalfLoaded.run();
             return;
         }
@@ -76,9 +79,26 @@ public class WallpaperController {
         }
 
         int initialIndex = pickInitialIndex();
-        currentWallpaperIndex = initialIndex;
 
         startBackgroundLoading(initialIndex);
+    }
+
+    // 壁紙フォルダが見つからない/空だった場合、設定画面へ誘導するメッセージを表示する
+    private void showNoWallpaperMessage() {
+        Label message = new Label(
+            "壁紙が見つかりませんでした。\n右下の設定アイコンから壁紙フォルダを指定してください。"
+        );
+        message.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        message.setAlignment(Pos.CENTER);
+        message.setWrapText(true);
+        message.setMaxWidth(600);
+        message.setStyle(
+            "-fx-text-fill: white; -fx-font-size: 22px; " +
+            "-fx-background-color: rgba(0,0,0,0.6); -fx-background-radius: 10; -fx-padding: 24;"
+        );
+
+        StackPane.setAlignment(message, Pos.CENTER);
+        rootPane.getChildren().add(message);
     }
 
     private void listWallpaperFiles() {
@@ -118,7 +138,7 @@ public class WallpaperController {
                 }
 
                 Image loaded = image;
-                Platform.runLater(() -> onWallpaperLoaded(index, loaded, index == initialIndex));
+                Platform.runLater(() -> onWallpaperLoaded(index, loaded));
             }
         }, "wallpaper-loader");
 
@@ -126,10 +146,15 @@ public class WallpaperController {
         loaderThread.start();
     }
 
-    private void onWallpaperLoaded(int index, Image image, boolean isInitial) {
+    private boolean initialShown = false;
+
+    private void onWallpaperLoaded(int index, Image image) {
         loadedCount++;
 
         if (image != null) {
+            // 最初に選んだ壁紙の読み込みに失敗していた場合は、最初に読み込めた壁紙を代わりに使う
+            boolean showAsInitial = !initialShown;
+
             double imageRatio = image.getWidth() / image.getHeight();
             double screenRatio = screenWidth / screenHeight;
             double scaleFactor = 1.10;
@@ -154,8 +179,8 @@ public class WallpaperController {
             if (imageRatio > screenRatio) fgView.setFitWidth(screenWidth);
             else fgView.setFitHeight(screenHeight);
 
-            bgView.setOpacity(isInitial ? 1.0 : 0.0);
-            fgView.setOpacity(isInitial ? 1.0 : 0.0);
+            bgView.setOpacity(showAsInitial ? 1.0 : 0.0);
+            fgView.setOpacity(showAsInitial ? 1.0 : 0.0);
 
             bgViews.set(index, bgView);
             fgViews.set(index, fgView);
@@ -163,7 +188,9 @@ public class WallpaperController {
             // 常に一番奥(index 0)へ挿入し、後から読み込まれた壁紙が時計・天気UIを覆わないようにする
             rootPane.getChildren().addAll(0, java.util.List.of(bgView, fgView));
 
-            if (isInitial) {
+            if (showAsInitial) {
+                initialShown = true;
+                currentWallpaperIndex = index;
                 applyInitialColors();
             }
         }

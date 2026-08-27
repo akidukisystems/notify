@@ -36,6 +36,19 @@ public class GUI extends Application {
 
         ctrl controller = loader.getController();
 
+        Scene scene = new Scene(root, 1920, 1080);
+        scene.getStylesheets().add(
+            getClass().getResource("/fxml/style.css").toExternalForm()
+        );
+
+        // GUI.stageはcontroller.setClass()が同期的に壁紙0枚ケースのコールバックを呼ぶ可能性があるため、
+        // それより前に必ず代入しておく(でないとコールバック内のGUI.stage.show()でNPEになる)
+        GUI.stage = stage;
+
+        stage.setScene(scene);
+        stage.setFullScreenExitHint("");
+        stage.setTitle("壁紙プレビュー");
+
         // 壁紙読み込み中は枠無しのスプラッシュ画面を表示し、半数読み込めたら本体ウィンドウに切り替える
         SplashScreen splash = new SplashScreen();
         splash.show();
@@ -49,17 +62,6 @@ public class GUI extends Application {
         });
 
         controller.setClass(GUI.staticWeather, GUI.staticConfigure);
-
-        Scene scene = new Scene(root, 1920, 1080);
-        scene.getStylesheets().add(
-            getClass().getResource("/fxml/style.css").toExternalForm()
-        );
-
-        GUI.stage = stage;
-
-        stage.setScene(scene);
-        stage.setFullScreenExitHint("");
-        stage.setTitle("壁紙プレビュー");
     }
 
     public static void launchApp(String[] args) {
