@@ -19,8 +19,13 @@ import com.google.gson.JsonParser;
 
 import javafx.scene.paint.Color;
 
+/**
+ * アプリの設定値を保持し、外部JSONファイル({@code settings.json}/{@code apikey.json})との読み書きを担うクラス。
+ * 設定画面({@code SettingsController})から変更された値もここを経由して永続化される。
+ */
 public class Configure {
 
+    /** 壁紙1枚分のテーマカラー(文字色・単色アクセント)とタグを保持するデータクラス。 */
     public static class WallpaperColor {
         public final Color mainColor;
         public final Color monoColor;
@@ -42,6 +47,10 @@ public class Configure {
     private static final Path SETTINGS_FILE = CONFIG_DIR.resolve("settings.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
+    /**
+     * 設定保存先ディレクトリを決定する。{@code %APPDATA%}が使えるWindowsではその下、
+     * それ以外のOSではユーザーホーム直下の{@code .notifyapp}を使う。
+     */
     private static Path resolveConfigDir() {
         String appData = System.getenv("APPDATA");
         if (appData != null && !appData.isBlank()) {
@@ -50,6 +59,7 @@ public class Configure {
         return Paths.get(System.getProperty("user.home"), ".notifyapp");
     }
 
+    /** 設定ファイルの絶対パスを返す(設定画面での案内表示用)。 */
     public static String getSettingsFilePath() {
         return SETTINGS_FILE.toString();
     }
@@ -72,36 +82,66 @@ public class Configure {
     private String mouseBatteryDeviceId = "";
 
     // --- getter ---
+    /** 壁紙の背景ぼかし量を返す(次回起動時に反映)。 */
     public int getBlur() { return blur; }
+    /** 壁紙自動切替の周期(秒)を返す。 */
     public int getWallpaperChangeSecond() { return wallpaperChangeSecond; }
+    /** 天気更新の周期(秒)を返す。 */
     public int getRefreshWeatherSecond() { return refreshWeatherSecond; }
+    /** UI左右反転の周期(秒)を返す。 */
     public int getReverseUISecond() { return reverseUISecond; }
+    /** フォントサイズ倍率を返す(次回起動時に反映)。 */
     public double getFontScale() { return fontScale; }
+    /** OpenWeather APIキーを返す。 */
     public String getApiKey() { return apiKey; }
+    /** 壁紙フォルダのパスを返す。 */
     public String getWallpaperPath() { return wallpaperPath; }
+    /** APIキーを保存しているJSONファイルのパスを返す。 */
     public String getApiKeyJson() { return apiKeyJson; }
+    /** 壁紙メタデータ(色・タグ)JSONファイルのパスを返す。 */
     public String getWallpaperMetadataPath() { return wallpaperMetadataPath; }
+    /** 天気取得に使う緯度を返す。 */
     public double getLatitude() { return latitude; }
+    /** 天気取得に使う経度を返す。 */
     public double getLongitude() { return longitude; }
+    /** 気象警報取得対象の市区町村コードを返す。 */
     public String getJmaAreaCode() { return jmaAreaCode; }
+    /** 表示用の地域名を返す。 */
     public String getJmaAreaName() { return jmaAreaName; }
+    /** バッテリー残量取得対象のBluetoothデバイスIDを返す。 */
     public String getMouseBatteryDeviceId() { return mouseBatteryDeviceId; }
 
     // --- setter(設定画面用に追加) ---
+    /** 背景ぼかし量を設定する。 */
     public void setBlur(int v) { blur = v; }
+    /** 壁紙自動切替の周期(秒)を設定する。 */
     public void setWallpaperChangeSecond(int v) { wallpaperChangeSecond = v; }
+    /** 天気更新の周期(秒)を設定する。 */
     public void setRefreshWeatherSecond(int v) { refreshWeatherSecond = v; }
+    /** UI左右反転の周期(秒)を設定する。 */
     public void setReverseUISecond(int v) { reverseUISecond = v; }
+    /** フォントサイズ倍率を設定する。 */
     public void setFontScale(double v) { fontScale = v; }
+    /** 壁紙フォルダのパスを設定する。 */
     public void setWallpaperPath(String v) { wallpaperPath = v; }
+    /** APIキー保存先JSONファイルのパスを設定する。 */
     public void setApiKeyJson(String v) { apiKeyJson = v; }
+    /** 壁紙メタデータJSONファイルのパスを設定する。 */
     public void setWallpaperMetadataPath(String v) { wallpaperMetadataPath = v; }
+    /** 緯度を設定する。 */
     public void setLatitude(double v) { latitude = v; }
+    /** 経度を設定する。 */
     public void setLongitude(double v) { longitude = v; }
+    /** 気象警報取得対象の市区町村コードを設定する。 */
     public void setJmaAreaCode(String v) { jmaAreaCode = v; }
+    /** 表示用の地域名を設定する。 */
     public void setJmaAreaName(String v) { jmaAreaName = v; }
+    /** バッテリー残量取得対象のBluetoothデバイスIDを設定する。 */
     public void setMouseBatteryDeviceId(String v) { mouseBatteryDeviceId = v; }
 
+    /**
+     * {@link #wallpaperMetadataPath}のJSONを読み込み、壁紙ファイル名ごとのテーマカラー・タグを{@link #wallpaperColors}に格納する。
+     */
     public void loadWallpaperColors() {
         Path path = Paths.get(wallpaperMetadataPath);
 
@@ -139,14 +179,20 @@ public class Configure {
         }
     }
 
+    /** 壁紙ファイル名をキーとするテーマカラー一覧を返す。 */
     public Map<String, WallpaperColor> getWallpaperColors() {
         return wallpaperColors;
     }
 
+    /** 指定した壁紙ファイルのテーマカラーを返す。未登録の場合は{@code null}。 */
     public WallpaperColor getColors(String wallpaperFileName) {
         return wallpaperColors.get(wallpaperFileName);
     }
 
+    /**
+     * 設定ファイルを読み込む。初回起動時はクラスパス同梱の初期設定をブートストラップし、
+     * 旧バージョンのクラスパス形式パスが残っていれば実ファイルへ移行した上で保存し直す。
+     */
     public void loadSettings() {
         ensureExternalConfigBootstrapped();
 
@@ -196,6 +242,7 @@ public class Configure {
         loadApiKey(apiKeyJson);
     }
 
+    /** 現在の設定値を{@code settings.json}へ書き出す。 */
     public void saveSettings() {
         try {
             Files.createDirectories(CONFIG_DIR);
@@ -221,6 +268,7 @@ public class Configure {
         }
     }
 
+    /** 指定パスのJSONファイルからAPIキーを読み込み、{@link #apiKey}に設定する。 */
     private void loadApiKey(String path) {
         if (path == null || path.isBlank()) {
             apiKey = "";
@@ -243,6 +291,7 @@ public class Configure {
         }
     }
 
+    /** APIキーを{@link #apiKeyJson}のファイルへ保存する(未設定なら設定フォルダ配下に新規作成)。 */
     public void saveApiKey(String newKey) {
         this.apiKey = newKey;
 
@@ -266,7 +315,7 @@ public class Configure {
         }
     }
 
-    // --- 初回起動時: クラスパス同梱のデフォルト設定を実ファイルへコピーする ---
+    /** 初回起動時、クラスパス同梱のデフォルト設定を実ファイルへコピーする。 */
     private void ensureExternalConfigBootstrapped() {
         if (Files.exists(SETTINGS_FILE)) {
             return;
@@ -284,7 +333,7 @@ public class Configure {
         }
     }
 
-    // --- 旧バージョンのクラスパス形式パスを実ファイルへコピーし、新しい絶対パスを返す ---
+    /** 旧バージョンのクラスパス形式パスを実ファイルへコピーし、新しい絶対パスを返す。 */
     private String migrateClasspathResourceToExternalFile(String classpathStylePath, String targetFileName) {
         Path target = CONFIG_DIR.resolve(targetFileName);
 

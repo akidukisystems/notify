@@ -22,6 +22,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+/**
+ * アプリの各種設定値を一覧編集できる、独立ウィンドウの設定画面。
+ */
 public class SettingsController {
 
     private final Configure configure;
@@ -43,17 +46,20 @@ public class SettingsController {
 
     private Label statusLabel;
 
+    /** 現在の設定値を初期値としてフォームを構築する。 */
     public SettingsController(Configure configure) {
         this.configure = configure;
         this.stage = new Stage();
         buildUI();
     }
 
+    /** 設定画面ウィンドウを表示し、前面に出す。 */
     public void show() {
         stage.show();
         stage.toFront();
     }
 
+    /** 設定フォーム一式(各入力欄・保存/閉じるボタン)を構築する。 */
     private void buildUI() {
         stage.setTitle("設定");
         stage.initModality(Modality.NONE);
@@ -136,6 +142,7 @@ public class SettingsController {
         stage.setScene(scene);
     }
 
+    /** グリッドの指定行にラベルと入力欄を並べて追加し、次の行番号を返す。 */
     private int addRow(GridPane grid, int row, String labelText, Node field) {
         Label label = new Label(labelText);
         grid.add(label, 0, row);
@@ -143,6 +150,7 @@ public class SettingsController {
         return row + 1;
     }
 
+    /** テキスト入力欄と「参照...」ボタンを横に並べたボックスを生成する。 */
     private HBox withBrowseButton(TextField field, Button button) {
         HBox box = new HBox(6, field, button);
         HBox.setHgrow(field, Priority.ALWAYS);
@@ -150,6 +158,7 @@ public class SettingsController {
         return box;
     }
 
+    /** フォルダ選択ダイアログを開き、選択されたパスを{@code target}に反映する。 */
     private void chooseDirectory(TextField target) {
         DirectoryChooser chooser = new DirectoryChooser();
         File current = new File(target.getText());
@@ -162,6 +171,7 @@ public class SettingsController {
         }
     }
 
+    /** ファイル選択ダイアログを開き、選択されたパスを{@code target}に反映する。 */
     private void chooseFile(TextField target, String description, String extensionPattern) {
         FileChooser chooser = new FileChooser();
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(description, extensionPattern));
@@ -175,6 +185,7 @@ public class SettingsController {
         }
     }
 
+    /** 入力欄の値を検証して{@link Configure}に反映・保存する。数値変換に失敗した場合はエラーメッセージを表示する。 */
     private void onSave() {
         try {
             double latitude = Double.parseDouble(latitudeField.getText().trim());

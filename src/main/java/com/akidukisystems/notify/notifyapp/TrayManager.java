@@ -18,7 +18,10 @@ import java.awt.image.BufferedImage;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 
-// ウィンドウを閉じてもアプリを終了させず、タスクトレイに常駐させるための管理クラス
+/**
+ * ウィンドウを閉じてもアプリを終了させず、タスクトレイに常駐させるための管理クラス。
+ * ×ボタン・タイトルバー最小化・トレイメニューいずれの経路でも{@link #hideStage()}に統一している。
+ */
 public class TrayManager {
 
     private TrayIcon trayIcon;
@@ -26,7 +29,13 @@ public class TrayManager {
     private Runnable onHide;
     private Runnable onShow;
 
-    // onHide: 非表示になった直後、onShow: 表示に復帰した直後に呼ばれる(バックグラウンド更新の一時停止/再開などに利用)
+    /**
+     * システムトレイにアイコンを常駐させ、ウィンドウの閉じる/最小化操作をトレイ格納に読み替える。
+     *
+     * @param stage   対象のウィンドウ
+     * @param onHide  非表示になった直後に呼ばれるコールバック(バックグラウンド更新の一時停止などに利用)
+     * @param onShow  表示に復帰した直後に呼ばれるコールバック(バックグラウンド更新の再開などに利用)
+     */
     public void install(Stage stage, Runnable onHide, Runnable onShow) {
         this.stage = stage;
         this.onHide = onHide;
@@ -87,12 +96,13 @@ public class TrayManager {
         });
     }
 
-    // すべてのトレイ格納経路(×ボタン/タイトルバー最小化/アプリ内ボタン)がここを通る
+    /** ウィンドウをトレイに格納する。すべてのトレイ格納経路(×ボタン/タイトルバー最小化/アプリ内ボタン)がここを通る。 */
     public void hideStage() {
         stage.hide();
         if (onHide != null) onHide.run();
     }
 
+    /** ウィンドウを(直前の状態のまま)前面に復元する。 */
     private void showStage() {
         stage.setIconified(false);
         stage.show();
@@ -100,6 +110,7 @@ public class TrayManager {
         if (onShow != null) onShow.run();
     }
 
+    /** ウィンドウをフルスクリーンで復元する。 */
     private void maximizeStage() {
         stage.setIconified(false);
         stage.show();
@@ -108,6 +119,7 @@ public class TrayManager {
         if (onShow != null) onShow.run();
     }
 
+    /** トレイアイコンを削除し、アプリケーションを終了する。 */
     private void exitApp() {
         if (trayIcon != null) {
             SystemTray.getSystemTray().remove(trayIcon);
@@ -116,7 +128,7 @@ public class TrayManager {
         System.exit(0);
     }
 
-    // 専用の画像アセットを持たないため、シンプルなバッジをその場で描画する
+    /** 専用の画像アセットを持たないため、シンプルな円形バッジアイコンをその場で描画する。 */
     private Image createIconImage() {
         int size = 32;
         BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);

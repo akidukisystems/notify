@@ -4,7 +4,17 @@ import javafx.animation.FadeTransition;
 import javafx.scene.Node;
 import javafx.util.Duration;
 
+/**
+ * ノードのフェードイン/フェードアウトをまとめた小さなアニメーションヘルパー。
+ */
 public class Animation {
+
+    /**
+     * 300msかけてノードをフェードアウトし、完了後に非表示にする。
+     *
+     * @param node ノード
+     * @param isManaging フェードアウト後、レイアウト計算の対象に含め続けるか({@code setManaged}に渡す値)
+     */
     public void fadeOut(Node node, boolean isManaging) {
         FadeTransition fade = new FadeTransition(Duration.millis(300), node);
         fade.setFromValue(1.0);
@@ -19,6 +29,9 @@ public class Animation {
         fade.play();
     }
 
+    /**
+     * ノードを表示状態にしてから300msかけてフェードインする。
+     */
     public void fadeIn(Node node) {
         node.setOpacity(0.0);
         node.setVisible(true);

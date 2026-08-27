@@ -19,6 +19,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+/**
+ * 気象庁の防災情報XMLフィード(regular.xml → VPWS50 個別データ)から、
+ * 指定した市区町村の警報・注意報一覧を取得・パースするクラス。
+ */
 public class JmaWarning {
 
     private static final String FEED_URL =
@@ -39,18 +43,24 @@ public class JmaWarning {
     private String maxSignificancyName;
     private String maxSignificancyCode;
 
+    /**
+     * @param areaCode 対象とする市区町村コード(気象庁XML中の{@code Area/Code}と一致するもの)
+     */
     public JmaWarning(String areaCode) {
         this.areaCode = areaCode;
     }
 
+    /** 直近の{@link #fetch()}で見つかった最大警戒レベルの警報・注意報名を返す(無ければ{@code null})。 */
     public String getMaxSignificancyName() {
         return maxSignificancyName;
     }
 
+    /** 直近の{@link #fetch()}で見つかった最大警戒レベルの重大度コードを返す(無ければ{@code null})。 */
     public String getMaxSignificancyCode() {
         return maxSignificancyCode;
     }
 
+    /** 1件の警報・注意報を表すデータクラス。 */
     public static class Warning {
 
         private String name;
@@ -65,34 +75,42 @@ public class JmaWarning {
 
         private final List<String> notes = new ArrayList<>();
 
+        /** 警報・注意報名(例: "大雨警報")を返す。 */
         public String getName() {
             return name;
         }
 
+        /** 警報・注意報の種別コードを返す。 */
         public String getCode() {
             return code;
         }
 
+        /** 発表状況(例: "発表"/"継続"/"解除")を返す。 */
         public String getStatus() {
             return status;
         }
 
+        /** 発表時刻を返す。 */
         public OffsetDateTime getReportDateTime() {
             return reportDateTime;
         }
 
+        /** プロパティ種別を返す。 */
         public String getPropertyType() {
             return propertyType;
         }
 
+        /** 重大度(危険度)の名称を返す。 */
         public String getSignificancyName() {
             return significancyName;
         }
 
+        /** 重大度(危険度)のコードを返す。 */
         public String getSignificancyCode() {
             return significancyCode;
         }
 
+        /** 付随する特記事項(Note)一覧を返す。 */
         public List<String> getNotes() {
             return notes;
         }
@@ -107,6 +125,11 @@ public class JmaWarning {
         }
     }
 
+    /**
+     * regular.xmlフィードから最新のVPWS50(警報・注意報)データを見つけて取得し、
+     * {@link #areaCode}に該当する警報・注意報一覧を返す。あわせて{@link #maxSignificancyName}/
+     * {@link #maxSignificancyCode}を最大警戒レベルで更新する。
+     */
     public List<Warning> fetch() throws Exception {
 
         maxSignificancyName = null;
@@ -132,6 +155,7 @@ public class JmaWarning {
         return parseWarnings(warningXml);
     }
 
+    /** 指定URLへHTTP GETし、レスポンスボディを文字列で返す。2xx以外は例外を投げる。 */
     private String fetchText(String url) throws Exception {
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -156,6 +180,7 @@ public class JmaWarning {
         return response.body();
     }
 
+    /** regular.xmlフィードのエントリから、更新日時が最も新しいVPWS50データのURLを探す。 */
     private String findLatestVpws50(String xml) throws Exception {
 
         Document doc = parseXml(xml);
@@ -213,6 +238,10 @@ public class JmaWarning {
         return latestUrl;
     }
 
+    /**
+     * VPWS50 XML本体から、{@link #areaCode}に一致する市区町村の警報・注意報を抽出する。
+     * 対象市区町村のItemが1件見つかった時点でそこまでの結果を返す(以降は探索しない)。
+     */
     private List<Warning> parseWarnings(String xml) throws Exception {
 
         List<Warning> result = new ArrayList<>();
@@ -311,6 +340,7 @@ public class JmaWarning {
         return result;
     }
 
+    /** {@code Item}要素の中に{@link #areaCode}と一致する{@code Area/Code}があるかを判定する。 */
     private boolean isTargetArea(Element item) {
         NodeList children = item.getChildNodes();
 
@@ -335,6 +365,7 @@ public class JmaWarning {
         return false;
     }
 
+    /** {@code Kind}要素1件を{@link Warning}にパースする。{@code Name}が無ければ{@code null}を返す。 */
     private Warning parseKind(Element kind) {
 
         String name = getDirectChildText(
@@ -396,6 +427,7 @@ public class JmaWarning {
         return warning;
     }
 
+    /** {@code Kind}内の{@code Property/Significancy}から重大度の名称・コードを読み取り、{@code warning}に設定する。 */
     private void parseProperty(
             Element kind,
             Warning warning) {
@@ -437,6 +469,7 @@ public class JmaWarning {
                         "Code");
     }
 
+    /** {@code Kind}内の{@code Addition/Note}を読み取り、特記事項として{@code warning}に追加する。 */
     private void parseAddition(
             Element kind,
             Warning warning) {
@@ -467,6 +500,7 @@ public class JmaWarning {
         }
     }
 
+    /** {@code parent}の直接の子要素から{@code tagName}に一致するものを探し、そのテキスト内容を返す(無ければ{@code null})。 */
     private String getDirectChildText(
             Element parent,
             String tagName) {
@@ -489,6 +523,7 @@ public class JmaWarning {
         return null;
     }
 
+    /** XML外部エンティティ等を無効化した安全な設定で、XML文字列を{@link Document}にパースする。 */
     private Document parseXml(String xml) throws Exception {
 
         DocumentBuilderFactory factory =

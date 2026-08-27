@@ -21,6 +21,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Popup;
 
+/**
+ * 気象庁の最大警戒レベル表示と個別の警報・注意報バッジを、グリッド状に並べて表示するコントローラー。
+ * バッジをクリックすると発表時刻・危険度などの詳細をオーバーレイ表示する。
+ */
 public class AlertUIController {
 
     private final Weather weather;
@@ -35,6 +39,11 @@ public class AlertUIController {
     private Popup warningDetailPopup;
     private StackPane warningDetailSource;
 
+    /**
+     * @param weather         警報・注意報の取得元
+     * @param messageConsumer 警報発表時に流すスクロールメッセージの送り先
+     * @param fontScale       フォントサイズ倍率
+     */
     public AlertUIController(Weather weather, Consumer<String> messageConsumer, double fontScale) {
         this.weather = weather;
         this.messageConsumer = messageConsumer;
@@ -46,10 +55,12 @@ public class AlertUIController {
         alertGridPane.setPadding(new Insets(10));
     }
 
+    /** 警報・注意報バッジを並べるグリッドノードを返す。 */
     public GridPane getNode() {
         return alertGridPane;
     }
 
+    /** 最大警戒レベル表示と個別の警報・注意報バッジを最新の{@link Weather}の内容で再描画する。 */
     public void update() {
         alertGridPane.getChildren().clear();
 
@@ -84,6 +95,7 @@ public class AlertUIController {
         }
     }
 
+    /** 気象庁の最大警戒レベルを示すバッジ(危険度に応じた色分け)を生成する。 */
     private StackPane createAlertPane(String currentMaxSignName) {
         Label typeLabel = new Label(currentMaxSignName);
 
@@ -113,7 +125,7 @@ public class AlertUIController {
         return alertPane;
     }
 
-    // 個別の警報・注意報バッジをクリックすると詳細をオーバーレイ表示(もう一度押すと閉じる)
+    /** 個別の警報・注意報バッジをクリックすると詳細をオーバーレイ表示する(もう一度押すと閉じる)。 */
     private void toggleWarningDetail(StackPane source, JmaWarning.Warning warning) {
         if (warningDetailPopup != null && warningDetailPopup.isShowing()) {
             boolean samePane = warningDetailSource == source;
@@ -150,6 +162,7 @@ public class AlertUIController {
         warningDetailSource = source;
     }
 
+    /** 「特記事項」見出しと各ノートを、最初のノートの位置に揃えて表示するブロックを生成する。 */
     private HBox createNotesBlock(List<String> notes) {
         Label header = new Label("特記事項");
         header.setTextFill(Color.WHITE);
@@ -166,6 +179,7 @@ public class AlertUIController {
         return new HBox(6, header, notesList);
     }
 
+    /** "ラベル  値" の形式のオーバーレイ用テキスト行を生成する。 */
     private Label createDetailLine(String name, String value) {
         Label l = new Label(name + "  " + value);
         l.setTextFill(Color.WHITE);
@@ -173,10 +187,12 @@ public class AlertUIController {
         return l;
     }
 
+    /** {@code null}または空文字を"-"に置き換える。 */
     private String nullToDash(String value) {
         return (value == null || value.isBlank()) ? "-" : value;
     }
 
+    /** 個別の警報・注意報1件分のバッジ(危険度に応じた色分け、クリックで詳細表示)を生成する。 */
     private StackPane createWarningPane(JmaWarning.Warning warning) {
         Label typeLabel = new Label(JmaWarningCode.getName(warning.getCode()));
 

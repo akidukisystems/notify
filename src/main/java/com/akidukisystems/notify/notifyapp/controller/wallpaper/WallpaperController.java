@@ -30,6 +30,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
+/**
+ * 壁紙フォルダの画像をバックグラウンドスレッドで読み込み、フェード切替・時間帯タグに応じたランダム選択・
+ * 壁紙から抽出したテーマカラーの反映までを担うコントローラー。
+ */
 public class WallpaperController {
 
     private final Configure configure;
@@ -53,6 +57,17 @@ public class WallpaperController {
     private final BiConsumer<Integer, Integer> onProgress;
     private final Runnable onHalfLoaded;
 
+    /**
+     * 壁紙ファイル一覧を取得し、初回表示分をバックグラウンドで読み込み始める。
+     *
+     * @param rootPane     壁紙のImageViewを追加する親ノード
+     * @param configure    壁紙フォルダのパス等を保持する設定
+     * @param themeManager テーマカラー反映先
+     * @param screenWidth  画面幅(壁紙のフィットサイズ計算に使用)
+     * @param screenHeight 画面高さ(同上)
+     * @param onProgress   読み込み進捗(読込済み数, 総数)の通知先
+     * @param onHalfLoaded 壁紙が半数読み込めた時点で1回だけ呼ばれるコールバック
+     */
     public WallpaperController(StackPane rootPane, Configure configure, ThemeManager themeManager,
                                 double screenWidth, double screenHeight,
                                 BiConsumer<Integer, Integer> onProgress, Runnable onHalfLoaded) {
@@ -83,7 +98,7 @@ public class WallpaperController {
         startBackgroundLoading(initialIndex);
     }
 
-    // 壁紙フォルダが見つからない/空だった場合、設定画面へ誘導するメッセージを表示する
+    /** 壁紙フォルダが見つからない/空だった場合、設定画面へ誘導するメッセージを表示する。 */
     private void showNoWallpaperMessage() {
         Label message = new Label(
             "壁紙が見つかりませんでした。\n右下の設定アイコンから壁紙フォルダを指定してください。"
@@ -101,6 +116,7 @@ public class WallpaperController {
         rootPane.getChildren().add(message);
     }
 
+    /** 壁紙フォルダ内の.jpg/.pngファイル名を{@link #wallpaperFiles}に列挙する。 */
     private void listWallpaperFiles() {
         Path dir = Paths.get(configure.getWallpaperPath());
 
@@ -117,7 +133,10 @@ public class WallpaperController {
         }
     }
 
-    // 壁紙を1枚ずつバックグラウンドスレッドで読み込み、都度JavaFXスレッドへ反映する
+    /**
+     * 壁紙を1枚ずつバックグラウンドスレッドで読み込み、都度{@link Platform#runLater}経由でJavaFXスレッドへ反映する。
+     * {@code initialIndex}を最初に読み込むよう順序を組み替える。
+     */
     private void startBackgroundLoading(int initialIndex) {
         List<Integer> order = new ArrayList<>();
         order.add(initialIndex);
@@ -148,6 +167,10 @@ public class WallpaperController {
 
     private boolean initialShown = false;
 
+    /**
+     * 1枚分の壁紙読み込み完了(またはデコード失敗)をFXスレッド上で処理する。
+     * まだ画面に何も表示していなければ、この壁紙を初期表示として採用する。
+     */
     private void onWallpaperLoaded(int index, Image image) {
         loadedCount++;
 
@@ -198,6 +221,7 @@ public class WallpaperController {
         updateLoadingProgress();
     }
 
+    /** 読み込み進捗を{@link #onProgress}へ通知し、半数に達した時点で1回だけ{@link #onHalfLoaded}を呼ぶ。 */
     private void updateLoadingProgress() {
         int total = wallpaperFiles.size();
 
@@ -209,6 +233,7 @@ public class WallpaperController {
         }
     }
 
+    /** 現在の壁紙のスナップショット(またはメタデータ指定のテーマカラー)から、初期テーマカラーを{@link ThemeManager}へ反映する。 */
     private void applyInitialColors() {
         WritableImage snapshot = fgViews.get(currentWallpaperIndex).snapshot(new SnapshotParameters(), null);
         String currentWallpaperFileName = wallpaperFiles.get(currentWallpaperIndex);
@@ -230,6 +255,10 @@ public class WallpaperController {
         themeManager.applyColors(textColor, wbColor);
     }
 
+    /**
+     * 現在時刻のタグに合う、読み込み済みの壁紙の中からランダムに1枚選んでフェード切替する。
+     * 切替完了後、新しい壁紙のスナップショットからテーマカラーを再計算して反映する。
+     */
     public void switchWallpaper() {
         if (currentWallpaperIndex == -1 || fgViews.get(currentWallpaperIndex) == null) return;
         if (isSwitchingWallpaper) return;
@@ -326,6 +355,7 @@ public class WallpaperController {
         fadeInfg.play();
     }
 
+    /** 現在時刻のタグに合う壁紙の中から、最初に読み込み・表示する1枚をランダムに選ぶ(まだ読み込みは行わない)。 */
     private int pickInitialIndex() {
         String tag = getSimplifiedTimeTag();
 
@@ -338,6 +368,7 @@ public class WallpaperController {
         return wallpaperFiles.indexOf(chosen);
     }
 
+    /** 指定タグを持つ壁紙(タグ未設定の壁紙も含む)のファイル名一覧を返す。 */
     private List<String> getWallpapersByTag(String tag) {
         List<String> result = new ArrayList<>();
 
@@ -357,12 +388,14 @@ public class WallpaperController {
         return result;
     }
 
+    /** {@link #getTimeTag()}の結果を、深夜帯(AM/PM)は"midnight"にまとめて返す。 */
     private String getSimplifiedTimeTag() {
         String tag = getTimeTag();
         if (tag.contains("midnight")) tag = "midnight";
         return tag;
     }
 
+    /** 現在時刻から時間帯タグ(morning/day/evening/night/midnightAM/midnightPM)を求める。 */
     private String getTimeTag() {
         int hour = LocalDateTime.now().getHour();
 
@@ -374,6 +407,7 @@ public class WallpaperController {
         return "midnightPM";
     }
 
+    /** 現在時刻が「今日の予報がもう終わった時間帯(夕方以降)」かどうかを返す。 */
     public boolean isPastedDay() {
         String tag = getTimeTag();
         return "evening".equals(tag) || "night".equals(tag) || "midnightPM".equals(tag);

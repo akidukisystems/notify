@@ -15,6 +15,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+/**
+ * OpenWeather One Call APIから現在の天気・予報・警報情報を取得し、パースして保持するクラス。
+ * 気象庁の警報・注意報({@link JmaWarning})も合わせて取得する。
+ */
 public class Weather {
     int weatherID;          // 天気ID
     String weatherString;   // 天候（完結）
@@ -47,97 +51,120 @@ public class Weather {
     private WeatherConverter wc = new WeatherConverter();
     JmaWarning jma;
 
+    /** 気象庁の警報・注意報取得器を返す。 */
     public JmaWarning getJma() {
         return jma;
     }
 
     private Core core;
 
+    /** 親となる{@link Core}を設定し、設定済みの地域コードで{@link JmaWarning}を生成する。 */
     public void setCore(Core core) {
         this.core = core;
         this.jma = new JmaWarning(core.configure.getJmaAreaCode());
     }
 
+    /** 降雨量(mm/h)を返す。 */
     public double getRain() {
         return rain;
     }
 
+    /** 降雪量(mm/h)を返す。 */
     public double getSnow() {
         return snow;
     }
 
+    /** 紫外線指数を返す。 */
     public double getUvi() {
         return uvi;
     }
 
+    /** 天気ID(OpenWeather独自のコード)を返す。 */
     public int getWeatherID() {
         return weatherID;
     }
 
+    /** 天候の簡潔な表現(例: "Rain")を返す。 */
     public String getWeatherString() {
         return weatherString;
     }
 
+    /** {@link WeatherConverter}で変換済みの天候詳細文を返す。 */
     public String getWeatherDetail() {
         return weatherDetail;
     }
 
+    /** 天気アイコンのコードを返す。 */
     public String getWeatherIcon() {
         return weatherIcon;
     }
 
+    /** 気温(K)を返す。 */
     public double getTemp() {
         return temp;
     }
 
+    /** 体感気温(K)を返す。 */
     public double getFeelingTemp() {
         return feelingTemp;
     }
 
+    /** 大気圧(hPa)を返す。 */
     public int getPressure() {
         return pressure;
     }
 
+    /** 湿度(%)を返す。 */
     public double getHumidity() {
         return humidity;
     }
 
+    /** 視界(m)を返す。 */
     public int getVisibility() {
         return visibility;
     }
 
+    /** 風速(m/s)を返す。 */
     public double getWindSpeed() {
         return windSpeed;
     }
 
+    /** 風向き(度)を返す。 */
     public int getWindDeg() {
         return windDeg;
     }
 
+    /** 雲量(%)を返す。 */
     public int getClouds() {
         return clouds;
     }
 
+    /** データ取得時刻(UNIX time)を返す。 */
     public long getFetchTime() {
         return fetchTime;
     }
 
+    /** 日の出時刻(UNIX time)を返す。 */
     public long getSunrise() {
         return sunrise;
     }
 
+    /** 日の入時刻(UNIX time)を返す。 */
     public long getSunset() {
         return sunset;
     }
 
+    /** 地域名(タイムゾーン文字列)を返す。 */
     public String getArea() {
         return area;
     }
 
+    /** タイムゾーン(UTCからのオフセット秒)を返す。 */
     public int getTimezone() {
         return timezone;
     }
 
+    /** OpenWeatherが返す気象アラート1件分。 */
     public static class Alert {
         public String sender;
         public String event;
@@ -147,6 +174,7 @@ public class Weather {
         public List<String> tags = new ArrayList<>();
     }
 
+    /** 1日分の予報データ。 */
     public static class Daily {
         public double temp_day;
         public double temp_min;
@@ -160,22 +188,26 @@ public class Weather {
 
     private List<Alert> alerts = new ArrayList<>();
 
+    /** OpenWeather側のアラート一覧を返す。 */
     public List<Alert> getAlerts() {
         return alerts;
     }
 
     private List<Daily> daily = new ArrayList<>();
 
+    /** 日別予報一覧を返す(先頭が本日分)。 */
     public List<Daily> getDaily() {
         return daily;
     }
 
     private List<JmaWarning.Warning> warnings = new ArrayList<>();
 
+    /** 気象庁の警報・注意報一覧を返す。 */
     public List<JmaWarning.Warning> getWarnings() {
         return warnings;
     }
 
+    /** ネットワーク接続無しで動作確認できるよう、固定JSONを使ってパース処理を実行する(デモ用)。 */
     public void fetchDemo() {
         // デモ用の固定JSON
         String demoJson = """
@@ -186,6 +218,12 @@ public class Weather {
         System.out.println("取得完了 demo");
     }
 
+    /**
+     * OpenWeather One Call APIから最新の天気情報を非同期取得し、{@link #parse}でこのインスタンスに反映する。
+     * あわせて気象庁の警報・注意報({@link JmaWarning#fetch()})も同期的に取得する。
+     *
+     * @return パース完了時に完了するFuture
+     */
     public CompletableFuture<Void> fetch() {
         HttpClient client = HttpClient.newHttpClient();
 
@@ -223,6 +261,7 @@ public class Weather {
             });
     }
 
+    /** OpenWeather One Call APIのレスポンスJSONをパースし、現在の天気・日別予報・アラートをフィールドへ反映する。 */
     private void parse(String data) {
         JsonObject json = JsonParser.parseString(data).getAsJsonObject();
 

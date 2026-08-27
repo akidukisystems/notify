@@ -31,6 +31,10 @@ import javafx.scene.transform.Rotate;
 import javafx.stage.Popup;
 import javafx.util.Duration;
 
+/**
+ * 現在の天気(気温・湿度・気圧など)と3日分の予報を表示するコントローラー。
+ * 天気アイコンをクリックすると、その日の最高・最低・平均気温をオーバーレイ表示する。
+ */
 public class WeatherUIController implements ThemeManager.ThemeListener {
 
     private final ThemeManager themeManager;
@@ -67,6 +71,12 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
     private final HBox line2Box; // 気圧・視界・風向
     private final HBox forecastsBox; // 現在の天気＋予報
 
+    /**
+     * @param themeManager         テーマカラー変更を購読するための{@link ThemeManager}
+     * @param weather              表示元となる{@link Weather}
+     * @param messageConsumer      紫外線指数・予報の説明などを流すスクロールメッセージの送り先
+     * @param isPastedDaySupplier  「今日の予報がもう終わった時間帯か」を返す判定関数(予報の開始日をずらすために使用)
+     */
     public WeatherUIController(ThemeManager themeManager, Weather weather,
                                 Consumer<String> messageConsumer,
                                 Supplier<Boolean> isPastedDaySupplier) {
@@ -149,16 +159,21 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
     }
 
     // --- ctrl.java側でレイアウトに組み込むためのアクセサ ---
+    /** 気温・体感温度・湿度の行を返す。 */
     public HBox getLine1Box() { return line1Box; }
+    /** 気圧・視界・風向の行を返す。 */
     public HBox getLine2Box() { return line2Box; }
+    /** 現在の天気+予報3日分の行を返す。 */
     public HBox getForecastsBox() { return forecastsBox; }
 
+    /** 現在の天気と予報表示を最新の{@link Weather}の内容で更新する。 */
     public void update() {
         List<Weather.Daily> daily = weather.getDaily();
         updateCurrentWeather(daily);
         updateForecasts(daily);
     }
 
+    /** 現在の気温・湿度・気圧などのラベルとアイコンを更新し、紫外線指数が高ければ注意喚起メッセージを流す。 */
     private void updateCurrentWeather(List<Weather.Daily> daily) {
         weatherTempLabel.setText(String.format("%.1f", weather.getTemp() - 273.15));
         weatherFeelingTempLabel.setText(String.format("%.1f", weather.getFeelingTemp() - 273.15));
@@ -196,6 +211,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         }
     }
 
+    /** 3日分の予報アイコン・天候詳細・日付ラベルを更新し、各日の予報をスクロールメッセージで案内する。 */
     private void updateForecasts(List<Weather.Daily> daily) {
         int j = 0;
         if (isPastedDaySupplier.get()) j = 1;
@@ -225,7 +241,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         }
     }
 
-    // 天気アイコンクリックで最高・最低・平均気温をオーバーレイ表示(もう一度押すと閉じる)
+    /** 天気アイコンクリックで最高・最低・平均気温をオーバーレイ表示する(もう一度押すと閉じる)。 */
     private void toggleForecastDetail(ImageView icon, Weather.Daily d) {
         if (forecastDetailPopup != null && forecastDetailPopup.isShowing()) {
             boolean sameIcon = forecastDetailIconSource == icon;
@@ -253,6 +269,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         forecastDetailIconSource = icon;
     }
 
+    /** "ラベル  ○○℃"(ケルビン→摂氏変換込み)のオーバーレイ用テキスト行を生成する。 */
     private Label createDetailLine(String name, double kelvin) {
         Label l = new Label(name + "  " + String.format("%.1f℃", kelvin - 273.15));
         l.setTextFill(Color.WHITE);
@@ -260,6 +277,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         return l;
     }
 
+    /** テーマカラーが変わった際、全ラベル・アイコン・風向き矢印の色をフェードで追従させる。 */
     @Override
     public void onThemeChanged(Color textColor, Color wbColor, DropShadow shadow) {
         for (Label l : allLabels) {
@@ -277,6 +295,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         weatherHumidityIcon.setColor(textColor);
     }
 
+    /** ラベルの文字色を300msかけて新しい色へアニメーションさせる。 */
     private void fadeTextColor(Label label, Color newColor) {
         final Color oldColor = (Color) label.getTextFill();
         Timeline timeline = new Timeline(
@@ -286,6 +305,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         timeline.play();
     }
 
+    /** 現在のテーマカラー・フォントサイズ倍率を反映したラベルを生成し、テーマ変更時の追従対象として記録する。 */
     private Label createLabel(String text, int size) {
         Label l = new Label(text);
         l.setStyle("-fx-font-size: " + (size * themeManager.getFontScale()) + "px;");
@@ -295,12 +315,14 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         return l;
     }
 
+    /** 中央揃えのVBoxを生成する。 */
     private VBox createVBox(int spacing, javafx.scene.Node... children) {
         VBox box = new VBox(spacing, children);
         box.setAlignment(Pos.CENTER);
         return box;
     }
 
+    /** 数値ラベルと単位ラベルを横に並べたボックスを生成する。 */
     private HBox create2elementsLabel(Label valueLabel, String unit, int unitSize) {
         Label unitLabel = createLabel(unit, unitSize);
         HBox hBox = new HBox(10);
@@ -309,6 +331,7 @@ public class WeatherUIController implements ThemeManager.ThemeListener {
         return hBox;
     }
 
+    /** 現在のテーマカラーを反映したSVGアイコンを生成する。 */
     private SVGIcon createIcon(String path, double size) {
         return svgHelper.createIcon(path, size, themeManager.getTextColor(), themeManager.getShadow());
     }

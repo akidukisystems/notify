@@ -12,6 +12,9 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
+/**
+ * Bluetoothマウスのバッテリー残量アイコンを表示・更新するコントローラー(Windows専用)。
+ */
 public class BatteryUIController implements ThemeManager.ThemeListener {
 
     private final ThemeManager themeManager;
@@ -22,6 +25,10 @@ public class BatteryUIController implements ThemeManager.ThemeListener {
 
     private SVGIcon currentIcon;
 
+    /**
+     * @param themeManager        テーマカラー変更を購読するための{@link ThemeManager}
+     * @param mouseBatteryDeviceId バッテリー取得対象のBluetoothデバイスID
+     */
     public BatteryUIController(ThemeManager themeManager, String mouseBatteryDeviceId) {
         this.themeManager = themeManager;
         this.batteryManager = new BatteryManager(mouseBatteryDeviceId);
@@ -30,11 +37,12 @@ public class BatteryUIController implements ThemeManager.ThemeListener {
         setIcon("/icons/svg/batterymissing.svg");
     }
 
+    /** バッテリーアイコンを表示するノードを返す(ボタン列に一度だけ追加すればよい)。 */
     public StackPane getNode() {
         return container;
     }
 
-    // お天気更新のタイミングなどから呼ばれる
+    /** バッテリー残量を非同期取得し、アイコンを更新する(天気更新のタイミングなどから呼ばれる)。 */
     public void refresh() {
         batteryManager.getMouseBattery().thenAccept(battery -> {
             System.out.println("Battery: " + battery + "%");
@@ -46,6 +54,7 @@ public class BatteryUIController implements ThemeManager.ThemeListener {
         });
     }
 
+    /** 指定パスのSVGアイコンを読み込み、テーマカラーで着色して表示する。 */
     private void setIcon(String path) {
         SVGImage svg = SVGLoader.load(getClass().getResource(path));
         SVGImage scaled = svg.scaleTo(32);
@@ -57,6 +66,7 @@ public class BatteryUIController implements ThemeManager.ThemeListener {
         container.getChildren().setAll(currentIcon);
     }
 
+    /** テーマカラーが変わった際、現在表示中のアイコンの色を追従させる。 */
     @Override
     public void onThemeChanged(Color textColor, Color wbColor, DropShadow shadow) {
         if (currentIcon != null) {

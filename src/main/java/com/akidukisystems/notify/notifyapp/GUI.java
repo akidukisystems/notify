@@ -8,6 +8,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * JavaFXアプリケーションのエントリーポイント。FXMLからメイン画面を構築し、
+ * 壁紙読み込み中はスプラッシュ画面({@link SplashScreen})を、常駐用にタスクトレイ({@link TrayManager})を用意する。
+ */
 public class GUI extends Application {
 
     private static Weather staticWeather;
@@ -16,11 +20,16 @@ public class GUI extends Application {
     public static Stage stage;
     public static TrayManager trayManager;
 
+    /** {@link Core}から{@link Weather}/{@link Configure}を受け取り、後続の{@link #start}で使えるようstaticに保持する。 */
     public static void setClass(Weather weather, Configure configure) {
         staticWeather = weather;
         staticConfigure = configure;
     }
 
+    /**
+     * メイン画面(FXML)を読み込み、スプラッシュ画面を表示してから壁紙読み込みを開始する。
+     * 壁紙が半数読み込まれた時点で本体ウィンドウに切り替わる。
+     */
     @Override
     public void start(Stage stage) throws Exception {
 
@@ -64,6 +73,7 @@ public class GUI extends Application {
         controller.setClass(GUI.staticWeather, GUI.staticConfigure);
     }
 
+    /** JavaFXアプリケーションを起動する。 */
     public static void launchApp(String[] args) {
         launch(args);
     }

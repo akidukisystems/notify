@@ -34,6 +34,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
+/**
+ * メイン画面(FXML: main.fxml)のコントローラー。時計・天気・警報・壁紙・バッテリーなど各機能コントローラーを
+ * 組み立て、ボタン操作やタイマーによる定期更新、トレイ格納時の一時停止/再開などアプリ全体の配線を担う。
+ */
 public class ctrl {
 
     @FXML
@@ -70,19 +74,25 @@ public class ctrl {
     private BiConsumer<Integer, Integer> wallpaperProgressListener;
     private Runnable wallpaperReadyListener;
 
-    // GUI(スプラッシュ画面)から、壁紙読み込みの進捗コールバックをsetClassより前に登録する
+    /**
+     * 壁紙読み込みの進捗コールバックを登録する。GUI(スプラッシュ画面)から{@link #setClass}より前に呼ぶ必要がある。
+     *
+     * @param onProgress 読み込み進捗(読込済み数, 総数)の通知先
+     * @param onReady    壁紙が半数読み込めた時点で1回だけ呼ばれるコールバック
+     */
     public void setWallpaperLoadListener(BiConsumer<Integer, Integer> onProgress, Runnable onReady) {
         this.wallpaperProgressListener = onProgress;
         this.wallpaperReadyListener = onReady;
     }
 
-    // GUI から親をセット
+    /** {@link GUI}から{@link Weather}/{@link Configure}を受け取り、画面全体を初期化する。 */
     public void setClass(Weather weather, Configure configure) {
         this.weather = weather;
         this.configure = configure;
         init();
     }
 
+    /** 各機能コントローラーの構築、ボタン配線、定期更新タイマーの起動など画面全体の初期化を行う。 */
     private void init() {
         double screenWidth = 1920;
         double screenHeight = 1080;
@@ -219,7 +229,7 @@ public class ctrl {
         updateWeatherUI();
     }
 
-    // トレイ格納中は時計・壁紙更新・天気更新・UI反転を止める(バッテリー取得は天気更新に連動)
+    /** トレイ格納中は時計・壁紙更新・天気更新・UI反転を止める(バッテリー取得は天気更新に連動)。 */
     public void pauseBackgroundUpdates() {
         clockController.pause();
         wallpaperTimeline.pause();
@@ -227,6 +237,7 @@ public class ctrl {
         reverseUITimeline.pause();
     }
 
+    /** 停止していた各種更新を再開し、更新周期を超えて古くなっていれば天気・警報・バッテリーを即時更新する。 */
     public void resumeBackgroundUpdates() {
         clockController.resume();
         wallpaperTimeline.play();
@@ -243,7 +254,7 @@ public class ctrl {
 
     private long lastWeatherFetchMillis = 0;
 
-    // UI 更新処理
+    /** 天気を非同期取得し、完了後に天気・警報・バッテリー(Windowsのみ)の各UIを更新する。 */
     private void updateWeatherUI() {
         lastWeatherFetchMillis = System.currentTimeMillis();
 
@@ -259,23 +270,27 @@ public class ctrl {
             });
     }
 
-    // VBox作る用
+    /** 中央揃えのVBoxを生成する。 */
     private VBox createVBox(int spacing, Node... children) {
         VBox box = new VBox(spacing, children);
         box.setAlignment(Pos.CENTER);
         return box;
     }
 
-    // スクロール表示メッセージの追加
+    /**
+     * スクロールメッセージをキューに追加する(現在は無効化されており、実質何もしない)。
+     * 各コントローラーからのメッセージ通知の受け口として渡されている。
+     */
     private void scrollMessage(String message) {
-        
+
         // messageQueue.add(message);
 
         // if (!isScrolling) {
         //     playNextMessage();
         // }
     }
-    // メッセージ表示
+
+    /** キューにたまったメッセージを順番に画面下部で右から左へスクロール表示する。 */
     private void playNextMessage() {
         if (messageQueue.isEmpty()) {
             isScrolling = false;
@@ -340,7 +355,7 @@ public class ctrl {
         });
     }
 
-    // ナイトモード
+    /** 画面全体を暗くし、秒表示をフェードアウトさせる(解除時は逆にフェードイン)。 */
     private void setNightMode(boolean isNight) {
         if(isNight) {
             ColorAdjust darken = new ColorAdjust();
@@ -363,16 +378,17 @@ public class ctrl {
         }
     }
 
-    // ナイトモードか知る
+    /** 現在ナイトモード(秒表示が非表示)かどうかを返す。 */
     private boolean isNightMode() {
         return !clockController.getSecBox().isVisible();
     }
 
+    /** ウィンドウのフルスクリーン状態を切り替える。 */
     private void setFullScreen(boolean isFullscreen) {
         GUI.stage.setFullScreen(isFullscreen);
     }
 
-    // UIを左右反転させる
+    /** 焼き付き防止のため、時計・天気パネルの表示位置を左右にフェード切替する。 */
     private void reverseUI() {
         FadeTransition fadeOut = new FadeTransition(Duration.millis(1000), LeftTopBox);
         fadeOut.setFromValue(1.0);
@@ -399,6 +415,7 @@ public class ctrl {
         fadeOut.play();
     }
 
+    /** 指定した色を適用したSVGアイコンを生成する(主にボタングラフィック用)。 */
     private SVGIcon createIcon(String path, double size, Color color) {
         return svgHelper.createIcon(path, size, color, themeManager.getShadow());
     }

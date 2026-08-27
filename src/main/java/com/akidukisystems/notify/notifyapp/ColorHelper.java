@@ -3,8 +3,18 @@ package com.akidukisystems.notify.notifyapp;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
+/**
+ * 画像を間引きサンプリングして代表色を求め、テーマ用のテキスト色・アクセント色を計算するヘルパー。
+ */
 public class ColorHelper {
-    
+
+    /**
+     * 画像を{@code step}間隔でサンプリングして平均色を求め、そこから
+     * 文字色(白/黒)・補色ベースのアクセント色・強調したアクセント色の3色を導出する。
+     *
+     * @param image 解析対象の画像(壁紙のスナップショットなど)
+     * @return {文字色, アクセント色, 強調アクセント色}の3要素配列
+     */
     public Color[] calculateColors(Image image) {
         int width = (int) image.getWidth();
         int height = (int) image.getHeight();
@@ -50,6 +60,9 @@ public class ColorHelper {
         return new Color[]{textBase, accentColor, finalAccent};
     }
 
+    /**
+     * RGB(各0〜1)をHSV({@code h}は0〜360度、{@code s}/{@code v}は0〜1)に変換する。
+     */
     private double[] rgbToHsv(double r, double g, double b) {
         double cMax = Math.max(r, Math.max(g, b));
         double cMin = Math.min(r, Math.min(g, b));
@@ -69,6 +82,9 @@ public class ColorHelper {
         return new double[]{h, s, v};
     }
 
+    /**
+     * HSVをJavaFXの{@link Color}に変換する。
+     */
     private Color hsvToColor(double h, double s, double v) {
         double c = v * s;
         double x = c * (1 - Math.abs((h / 60) % 2 - 1));

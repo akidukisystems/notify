@@ -17,6 +17,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
+/**
+ * 日付・時刻(HH:mm:ss)をフェードアニメーション付きで1秒ごとに更新するコントローラー。
+ */
 public class ClockController implements ThemeManager.ThemeListener {
 
     private final ThemeManager themeManager;
@@ -28,6 +31,7 @@ public class ClockController implements ThemeManager.ThemeListener {
     private final HBox timeBox;
     private final HBox secBox;
 
+    /** 時計用ラベル群を初期値付きで構築する({@link #start()}を呼ぶまで時刻更新は始まらない)。 */
     public ClockController(ThemeManager themeManager) {
         this.themeManager = themeManager;
         themeManager.addListener(this);
@@ -60,19 +64,23 @@ public class ClockController implements ThemeManager.ThemeListener {
     }
 
     // --- ctrl.java側でレイアウトに組み込むためのアクセサ ---
+    /** 時・分・秒をまとめたボックスを返す。 */
     public HBox getTimeBox() { return timeBox; }
-    public HBox getSecBox() { return secBox; } // 夜間モードのfadeOut対象として引き続き必要
+    /** 秒表示部分のボックスを返す(夜間モードのfadeOut対象として引き続き必要)。 */
+    public HBox getSecBox() { return secBox; }
+    /** 日付ラベルを返す。 */
     public Label getDateLabel() { return dateLabel; }
 
     private boolean running = false;
     private Timeline tickTimeline;
 
+    /** 1秒ごとの時刻更新を開始する。 */
     public void start() {
         running = true;
         scheduleNextTick();
     }
 
-    // トレイ格納中などに時刻更新を止める
+    /** 時刻更新を停止する(トレイ格納中などに使用)。 */
     public void pause() {
         running = false;
         if (tickTimeline != null) {
@@ -80,12 +88,14 @@ public class ClockController implements ThemeManager.ThemeListener {
         }
     }
 
+    /** 停止していた時刻更新を再開する。 */
     public void resume() {
         if (running) return;
         running = true;
         scheduleNextTick();
     }
 
+    /** 次の秒の切り替わりタイミングに合わせて{@link #updateClock()}を1回だけ予約する(自己再スケジュール方式)。 */
     private void scheduleNextTick() {
         LocalDateTime now = LocalDateTime.now();
         long delay = 1000 - now.getNano() / 1_000_000;
@@ -98,6 +108,7 @@ public class ClockController implements ThemeManager.ThemeListener {
         tickTimeline.play();
     }
 
+    /** 現在時刻を計算し、変化した桁だけ{@link #fadeLabel}でフェード切り替えする。 */
     private void updateClock() {
         LocalDateTime now = LocalDateTime.now();
 
@@ -119,6 +130,7 @@ public class ClockController implements ThemeManager.ThemeListener {
             fadeLabel(dateLabel, nextDate);
     }
 
+    /** ラベルをフェードアウトし、テキストを差し替えてからフェードインする。 */
     private void fadeLabel(Label label, String newText) {
         FadeTransition fadeOut = new FadeTransition(Duration.millis(100), label);
         fadeOut.setFromValue(1.0);
@@ -136,6 +148,7 @@ public class ClockController implements ThemeManager.ThemeListener {
         fadeOut.play();
     }
 
+    /** 現在のテーマカラー・フォントサイズ倍率を反映したラベルを生成する。 */
     private Label createLabel(String text, int size) {
         Label l = new Label(text);
         l.setStyle("-fx-font-size: " + (size * themeManager.getFontScale()) + "px;");
@@ -144,6 +157,7 @@ public class ClockController implements ThemeManager.ThemeListener {
         return l;
     }
 
+    /** テーマカラーが変わった際、全ラベルの文字色をフェードで追従させる。 */
     @Override
     public void onThemeChanged(Color textColor, Color wbColor, DropShadow shadow) {
         fadeTextColor(dateLabel, textColor);
@@ -151,6 +165,7 @@ public class ClockController implements ThemeManager.ThemeListener {
         for (Label l : secLabels) fadeTextColor(l, textColor);
     }
 
+    /** ラベルの文字色を300msかけて新しい色へアニメーションさせる。 */
     private void fadeTextColor(Label label, Color newColor) {
         final Color oldColor = (Color) label.getTextFill();
         Timeline timeline = new Timeline(

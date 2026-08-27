@@ -2,6 +2,9 @@ package com.akidukisystems.notify.notifyapp;
 
 import java.util.Map;
 
+/**
+ * 気象庁の警報・注意報コードと、その日本語名称の対応表。
+ */
 public class JmaWarningCode {
 
     private static final Map<String, String> WARNING_NAMES = Map.ofEntries(
@@ -45,6 +48,9 @@ public class JmaWarningCode {
         Map.entry("49", "土砂災害危険警報")
     );
 
+    /**
+     * 警報・注意報コードから日本語名称を取得する。未知のコードの場合は「不明な警報・注意報」を返す。
+     */
     public static String getName(String code) {
         return WARNING_NAMES.getOrDefault(code, "不明な警報・注意報");
     }
