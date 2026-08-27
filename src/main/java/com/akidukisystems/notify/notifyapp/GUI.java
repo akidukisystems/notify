@@ -1,11 +1,14 @@
 package com.akidukisystems.notify.notifyapp;
 
+import java.io.File;
+
 import com.akidukisystems.notify.notifyapp.controller.ctrl;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 /**
@@ -36,6 +39,10 @@ public class GUI extends Application {
         // ★ここで初期化する
         Core core = new Core();
         core.init();
+
+        if (GUI.staticConfigure.getWallpaperPath().isBlank()) {
+            promptForWallpaperFolder(GUI.staticConfigure);
+        }
 
         FXMLLoader loader = new FXMLLoader(
             getClass().getResource("/fxml/main.fxml")
@@ -76,5 +83,20 @@ public class GUI extends Application {
     /** JavaFXアプリケーションを起動する。 */
     public static void launchApp(String[] args) {
         launch(args);
+    }
+
+    /**
+     * 壁紙フォルダのパスが未設定のとき、フォルダ選択ダイアログを表示して選択結果を{@link Configure}に保存する。
+     * キャンセルされた場合は空のまま進める(壁紙0枚時の案内メッセージが後段で表示される)。
+     */
+    private static void promptForWallpaperFolder(Configure configure) {
+        DirectoryChooser chooser = new DirectoryChooser();
+        chooser.setTitle("壁紙フォルダを選択してください");
+
+        File selected = chooser.showDialog(null);
+        if (selected != null) {
+            configure.setWallpaperPath(selected.getAbsolutePath() + File.separator);
+            configure.saveSettings();
+        }
     }
 }

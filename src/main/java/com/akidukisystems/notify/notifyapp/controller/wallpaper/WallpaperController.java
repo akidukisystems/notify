@@ -20,6 +20,8 @@ import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
@@ -46,6 +48,9 @@ public class WallpaperController {
     private final List<ImageView> bgViews = new ArrayList<>();
     private final List<ImageView> fgViews = new ArrayList<>();
     private final List<String> wallpaperFiles = new ArrayList<>();
+
+    /** この枚数以上の壁紙がある場合、初回のみメモリ使用量に関する警告ダイアログを表示する。 */
+    private static final int LARGE_LIBRARY_WARNING_THRESHOLD = 1000;
 
     private int currentWallpaperIndex = -1;
     private boolean isSwitchingWallpaper = false;
@@ -87,6 +92,12 @@ public class WallpaperController {
             return;
         }
 
+        if (wallpaperFiles.size() >= LARGE_LIBRARY_WARNING_THRESHOLD && !configure.isLargeWallpaperLibraryWarningShown()) {
+            showLargeLibraryWarning(wallpaperFiles.size());
+            configure.setLargeWallpaperLibraryWarningShown(true);
+            configure.saveSettings();
+        }
+
         // bgViews/fgViewsは読み込み済みのものだけ埋まる。未読込みはnullのまま
         for (int i = 0; i < wallpaperFiles.size(); i++) {
             bgViews.add(null);
@@ -96,6 +107,23 @@ public class WallpaperController {
         int initialIndex = pickInitialIndex();
 
         startBackgroundLoading(initialIndex);
+    }
+
+    /**
+     * 壁紙が{@link #LARGE_LIBRARY_WARNING_THRESHOLD}枚以上ある場合に、メモリ使用量に関する警告を表示する。
+     * 現在の実装は全壁紙を元解像度でデコードしたまま常駐させるため、数千枚規模ではメモリ不足で
+     * 読み込みが途中停止する可能性がある(初回のみ表示、以後の起動では再表示しない)。
+     */
+    private void showLargeLibraryWarning(int fileCount) {
+        Alert alert = new Alert(AlertType.WARNING);
+        alert.setTitle("壁紙の枚数について");
+        alert.setHeaderText("壁紙フォルダに" + fileCount + "枚の画像があります");
+        alert.setContentText(
+            "現在の実装では、全ての壁紙を元の解像度でメモリに読み込んだまま保持します。\n" +
+            "枚数が多いとメモリ使用量が非常に大きくなり、読み込みが途中で止まる場合があります。\n" +
+            "このメッセージは初回のみ表示されます。"
+        );
+        alert.showAndWait();
     }
 
     /** 壁紙フォルダが見つからない/空だった場合、設定画面へ誘導するメッセージを表示する。 */
@@ -343,7 +371,6 @@ public class WallpaperController {
                 wbColor = colors[0];
             }
 
-            // ★ここが今までの二重更新を解消するポイント。
             // themeManagerに1回通知するだけで、Clock/Weather/Battery全てのリスナーに一括反映される
             themeManager.applyColors(textColor, wbColor);
 

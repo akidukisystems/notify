@@ -80,6 +80,7 @@ public class Configure {
     private String jmaAreaCode = "";
     private String jmaAreaName = "";
     private String mouseBatteryDeviceId = "";
+    private boolean largeWallpaperLibraryWarningShown = false;
 
     // --- getter ---
     /** 壁紙の背景ぼかし量を返す(次回起動時に反映)。 */
@@ -110,6 +111,8 @@ public class Configure {
     public String getJmaAreaName() { return jmaAreaName; }
     /** バッテリー残量取得対象のBluetoothデバイスIDを返す。 */
     public String getMouseBatteryDeviceId() { return mouseBatteryDeviceId; }
+    /** 大量壁紙警告(1000枚以上でのメモリ使用量注意)を表示済みかどうかを返す。 */
+    public boolean isLargeWallpaperLibraryWarningShown() { return largeWallpaperLibraryWarningShown; }
 
     // --- setter(設定画面用に追加) ---
     /** 背景ぼかし量を設定する。 */
@@ -138,6 +141,8 @@ public class Configure {
     public void setJmaAreaName(String v) { jmaAreaName = v; }
     /** バッテリー残量取得対象のBluetoothデバイスIDを設定する。 */
     public void setMouseBatteryDeviceId(String v) { mouseBatteryDeviceId = v; }
+    /** 大量壁紙警告を表示済みとしてマークする(以後の起動では再表示しない)。 */
+    public void setLargeWallpaperLibraryWarningShown(boolean v) { largeWallpaperLibraryWarningShown = v; }
 
     /**
      * {@link #wallpaperMetadataPath}のJSONを読み込み、壁紙ファイル名ごとのテーマカラー・タグを{@link #wallpaperColors}に格納する。
@@ -218,6 +223,8 @@ public class Configure {
             jmaAreaName = json.has("jmaAreaName") ? json.get("jmaAreaName").getAsString() : "";
             mouseBatteryDeviceId = json.has("mouseBatteryDeviceId") ? json.get("mouseBatteryDeviceId").getAsString()
                     : "BTHLE\\DEV_DCEA530D8015\\A&CBCF98&0&DCEA530D8015";
+            largeWallpaperLibraryWarningShown = json.has("largeWallpaperLibraryWarningShown")
+                    && json.get("largeWallpaperLibraryWarningShown").getAsBoolean();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -227,11 +234,6 @@ public class Configure {
 
         if (apiKeyJson.startsWith("/")) {
             apiKeyJson = migrateClasspathResourceToExternalFile(apiKeyJson, "apikey.json");
-            needsResave = true;
-        }
-
-        if (wallpaperMetadataPath.startsWith("/")) {
-            wallpaperMetadataPath = migrateClasspathResourceToExternalFile(wallpaperMetadataPath, "wallpaper_colors.json");
             needsResave = true;
         }
 
@@ -261,6 +263,7 @@ public class Configure {
             json.addProperty("jmaAreaCode", jmaAreaCode);
             json.addProperty("jmaAreaName", jmaAreaName);
             json.addProperty("mouseBatteryDeviceId", mouseBatteryDeviceId);
+            json.addProperty("largeWallpaperLibraryWarningShown", largeWallpaperLibraryWarningShown);
 
             Files.writeString(SETTINGS_FILE, GSON.toJson(json), StandardCharsets.UTF_8);
         } catch (IOException e) {
