@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-WBMC (WallClock) — a JavaFX fullscreen/windowed desktop app that overlays a clock, OpenWeather-based weather forecast, JMA (気象庁) warnings, and an auto-rotating wallpaper slideshow with theme-color extraction. Personal project, single developer (akidukisystems).
+Chronoscape (陽だまり) — a JavaFX fullscreen/windowed desktop app that overlays a clock, OpenWeather-based weather forecast, JMA (気象庁) warnings, and an auto-rotating wallpaper slideshow with theme-color extraction. Personal project, single developer (akidukisystems).
+
+**Name origin**: "Chronoscape" is a coined blend of *chrono-* (time/clock) and *-scape* (landscape/wallpaper), reflecting the app's core idea of overlaying a clock on a rotating wallpaper backdrop. "陽だまり" (hidamari, "a sunny/warm spot") is the Japanese subtitle, evoking the always-on, ambient presence of the app sitting quietly on the desktop.
 
 ## Build / run
 

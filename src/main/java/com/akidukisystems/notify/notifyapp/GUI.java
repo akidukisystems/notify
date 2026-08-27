@@ -63,7 +63,7 @@ public class GUI extends Application {
 
         stage.setScene(scene);
         stage.setFullScreenExitHint("");
-        stage.setTitle("壁紙プレビュー");
+        stage.setTitle("Chronoscape");
 
         // 壁紙読み込み中は枠無しのスプラッシュ画面を表示し、半数読み込めたら本体ウィンドウに切り替える
         SplashScreen splash = new SplashScreen();
